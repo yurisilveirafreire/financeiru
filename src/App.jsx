@@ -9,18 +9,6 @@ const FIREBASE_CONFIG = {
   appId: "1:868386871849:web:f8baa786b8f29456feda38",
 };
 
-// Mapa de emails -> nomes amigáveis
-const USER_NAMES = {
-  "yurisilveirafreire@hotmail.com": "Yuri",
-  "marcelaanepomuceno@gmail.com": "Marcela",
-};
-const KNOWN_USERS = [
-  { email: "yurisilveirafreire@hotmail.com", name: "Yuri" },
-  { email: "marcelaanepomuceno@gmail.com",   name: "Marcela" },
-];
-const friendlyName = (emailOrName) =>
-  USER_NAMES[emailOrName] || emailOrName?.split("@")[0] || emailOrName || "—";
-
 let _fb = null;
 async function getFirebase() {
   if (_fb) return _fb;
@@ -54,19 +42,18 @@ const fmt = (v) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL
 const todayStr = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
 const monthKey = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
 
-// ---- DEMO DATA ----
 let demoIncomes = [
-  { id:"i1", userId:"u1", userName:"Yuri",    userEmail:"yurisilveirafreire@hotmail.com", description:"Salário", amount:5500, category:"salario", date:"01/05/2025", month:"2025-05", createdAt:1 },
-  { id:"i2", userId:"u2", userName:"Marcela", userEmail:"marcelaanepomuceno@gmail.com",   description:"Salário", amount:4200, category:"salario", date:"01/05/2025", month:"2025-05", createdAt:2 },
-  { id:"i3", userId:"u1", userName:"Yuri",    userEmail:"yurisilveirafreire@hotmail.com", description:"Freela",  amount:800,  category:"freela",  date:"15/05/2025", month:"2025-05", createdAt:3 },
+  { id:"i1", userId:"u1", userName:"Você",   description:"Salário", amount:5500, category:"salario", date:"01/05/2025", month:"2025-05", createdAt:1 },
+  { id:"i2", userId:"u2", userName:"Esposa", description:"Salário", amount:4200, category:"salario", date:"01/05/2025", month:"2025-05", createdAt:2 },
+  { id:"i3", userId:"u1", userName:"Você",   description:"Freela",  amount:800,  category:"freela",  date:"15/05/2025", month:"2025-05", createdAt:3 },
 ];
 let demoExpenses = [
-  { id:"e1", userId:"u1", userName:"Yuri",    userEmail:"yurisilveirafreire@hotmail.com", description:"Aluguel",     amount:1800, category:"moradia",     date:"05/05/2025", month:"2025-05", createdAt:4 },
-  { id:"e2", userId:"u2", userName:"Marcela", userEmail:"marcelaanepomuceno@gmail.com",   description:"Mercado",     amount:650,  category:"alimentacao", date:"10/05/2025", month:"2025-05", createdAt:5 },
-  { id:"e3", userId:"u1", userName:"Yuri",    userEmail:"yurisilveirafreire@hotmail.com", description:"Gasolina",    amount:280,  category:"transporte",  date:"12/05/2025", month:"2025-05", createdAt:6 },
-  { id:"e4", userId:"u2", userName:"Marcela", userEmail:"marcelaanepomuceno@gmail.com",   description:"Farmácia",    amount:120,  category:"saude",       date:"15/05/2025", month:"2025-05", createdAt:7 },
-  { id:"e5", userId:"u1", userName:"Yuri",    userEmail:"yurisilveirafreire@hotmail.com", description:"Netflix",     amount:75,   category:"lazer",       date:"18/05/2025", month:"2025-05", createdAt:8 },
-  { id:"e6", userId:"u2", userName:"Marcela", userEmail:"marcelaanepomuceno@gmail.com",   description:"Academia",    amount:110,  category:"pessoal",     date:"20/05/2025", month:"2025-05", createdAt:9 },
+  { id:"e1", userId:"u1", userName:"Você",   description:"Aluguel",  amount:1800, category:"moradia",     date:"05/05/2025", month:"2025-05", createdAt:4 },
+  { id:"e2", userId:"u2", userName:"Esposa", description:"Mercado",  amount:650,  category:"alimentacao", date:"10/05/2025", month:"2025-05", createdAt:5 },
+  { id:"e3", userId:"u1", userName:"Você",   description:"Gasolina", amount:280,  category:"transporte",  date:"12/05/2025", month:"2025-05", createdAt:6 },
+  { id:"e4", userId:"u2", userName:"Esposa", description:"Farmácia", amount:120,  category:"saude",       date:"15/05/2025", month:"2025-05", createdAt:7 },
+  { id:"e5", userId:"u1", userName:"Você",   description:"Netflix",  amount:75,   category:"lazer",       date:"18/05/2025", month:"2025-05", createdAt:8 },
+  { id:"e6", userId:"u2", userName:"Esposa", description:"Academia", amount:110,  category:"pessoal",     date:"20/05/2025", month:"2025-05", createdAt:9 },
 ];
 let demoCategories = [...DEFAULT_CATEGORIES];
 let demoGoals = { "2025-05": 2000 };
@@ -112,11 +99,20 @@ export default function App() {
   }, [fb, user, month, demo]);
 
   const addItem = async (col, data) => {
-    // data pode ter onBehalfOf: { email, name } para lançar pelo outro
-    const targetEmail = data.onBehalfOf?.email || user.email;
-    const targetName  = data.onBehalfOf?.name  || USER_NAMES[user.email] || user.displayName || user.email;
-    const { onBehalfOf, ...rest } = data;
-    const item = { ...rest, userId: user.uid, userEmail: targetEmail, userName: targetName, month, createdAt: Date.now() };
+    // 🛡️ TRAVA ANTI-SOBRESCRITA
+    const newAmount = Number(data.amount);
+    if (!newAmount || newAmount <= 0) {
+      showToast("⚠️ Valor inválido. Use valores positivos.","error");
+      return;
+    }
+    const currentTotal = col==="incomes"
+      ? incomes.reduce((s,i)=>s+Number(i.amount),0)
+      : expenses.reduce((s,e)=>s+Number(e.amount),0);
+    if (currentTotal > 0 && newAmount > currentTotal * 10) {
+      showToast("⚠️ Valor muito alto bloqueado. Verifique e tente novamente.","error");
+      return;
+    }
+    const item = { ...data, userId: user.uid, userName: user.displayName||user.email, month, createdAt: Date.now() };
     if (demo) {
       const ni = { ...item, id: Date.now().toString() };
       if (col==="incomes") { demoIncomes.push(ni); setIncomes(p=>[...p,ni]); }
@@ -180,19 +176,19 @@ export default function App() {
         catch(e){showToast(e.message,"error");}
         setLoading(false);
       }}
-      onDemo={()=>{setDemo(true);setUser({uid:"u1",email:"yurisilveirafreire@hotmail.com",displayName:"Yuri"});setScreen("app");}}
+      onDemo={()=>{setDemo(true);setUser({uid:"u1",email:"demo@financeiro.com",displayName:"Demo"});setScreen("app");}}
     />
   );
 
   return (
     <div style={S.root}>
       {toast && <div style={{...S.toast, background: toast.type==="error"?"#ef4444":toast.type==="info"?"#6366f1":"#10b981"}}>{toast.msg}</div>}
-      <Header month={month} onMonth={setMonth} demo={demo} onLogout={handleLogout} user={user} />
+      <Header month={month} onMonth={setMonth} demo={demo} onLogout={handleLogout} />
       <Nav tab={tab} onTab={setTab} />
       <main style={S.main}>
         {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} month={month} onGoal={saveGoal} />}
-        {tab==="incomes"    && <Incomes   incomes={incomes}   categories={categories} currentUser={user} onAdd={d=>addItem("incomes",d)}  onEdit={(id,d)=>editItem("incomes",id,d)}  onDelete={id=>deleteItem("incomes",id)}  onAddCat={addCategory} />}
-        {tab==="expenses"   && <Expenses  expenses={expenses} categories={categories} currentUser={user} onAdd={d=>addItem("expenses",d)} onEdit={(id,d)=>editItem("expenses",id,d)} onDelete={id=>deleteItem("expenses",id)} onAddCat={addCategory} />}
+        {tab==="incomes"    && <Incomes   incomes={incomes}   categories={categories} onAdd={d=>addItem("incomes",d)}  onEdit={(id,d)=>editItem("incomes",id,d)}  onDelete={id=>deleteItem("incomes",id)}  onAddCat={addCategory} />}
+        {tab==="expenses"   && <Expenses  expenses={expenses} categories={categories} onAdd={d=>addItem("expenses",d)} onEdit={(id,d)=>editItem("expenses",id,d)} onDelete={id=>deleteItem("expenses",id)} onAddCat={addCategory} />}
         {tab==="history"    && <History   incomes={incomes}   expenses={expenses} categories={categories} month={month} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} />}
         {tab==="categories" && <Categories categories={categories} expenses={expenses} incomes={incomes} onAdd={addCategory} onEdit={editCategory} />}
       </main>
@@ -200,9 +196,6 @@ export default function App() {
   );
 }
 
-// ================================================================
-// LOGIN
-// ================================================================
 function LoginScreen({onLogin,onDemo,loading,toast}){
   const [email,setEmail]=useState("");
   const [pass,setPass]=useState("");
@@ -220,20 +213,15 @@ function LoginScreen({onLogin,onDemo,loading,toast}){
         <button style={S.btnLink} onClick={()=>setReg(!reg)}>{reg?"Já tenho conta":"Criar nova conta"}</button>
         <div style={{textAlign:"center",color:"#334155",margin:"14px 0",borderTop:"1px solid #334155",lineHeight:0}}><span style={{background:"#1e293b",padding:"0 12px",color:"#475569"}}>ou</span></div>
         <button style={S.btnGhost} onClick={onDemo}>🎮 Experimentar (Demo)</button>
-        <p style={{fontSize:12,color:"#475569",textAlign:"center",marginTop:10}}>No modo demo você vê o app completo com dados de exemplo</p>
       </div>
     </div>
   );
 }
 
-// ================================================================
-// HEADER + NAV
-// ================================================================
-function Header({month,onMonth,demo,onLogout,user}){
+function Header({month,onMonth,demo,onLogout}){
   const [y,m]=month.split("-").map(Number);
   const prev=()=>{ const d=new Date(y,m-2,1); onMonth(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`); };
   const next=()=>{ const d=new Date(y,m,1);   onMonth(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`); };
-  const name = user ? (USER_NAMES[user.email] || user.email?.split("@")[0]) : "";
   return(
     <header style={S.header}>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -244,7 +232,6 @@ function Header({month,onMonth,demo,onLogout,user}){
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
-        {name && <div style={{fontSize:12,color:"#64748b",fontWeight:600}}>Olá, {name} 👋</div>}
         <div style={S.monthSel}>
           <button style={S.monthBtn} onClick={prev}>‹</button>
           <span style={{fontSize:13,fontWeight:700,minWidth:72,textAlign:"center"}}>{MONTHS[m-1]} {y}</span>
@@ -276,45 +263,25 @@ function Nav({tab,onTab}){
   );
 }
 
-// ================================================================
-// DASHBOARD
-// ================================================================
 function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,month,onGoal}){
   const [editGoal,setEditGoal]=useState(false);
   const [gInput,setGInput]=useState(goal);
 
-  // gastos por categoria
   const byCatExp={};
   expenses.forEach(e=>{ byCatExp[e.category]=(byCatExp[e.category]||0)+Number(e.amount); });
 
-  // receitas por categoria
   const byCatInc={};
   incomes.forEach(i=>{ byCatInc[i.category]=(byCatInc[i.category]||0)+Number(i.amount); });
 
-  // resumo por pessoa (usando userEmail ou userName)
   const byPerson={};
-  [...incomes,...expenses].forEach(x=>{
-    const key = x.userEmail || x.userName;
-    const label = USER_NAMES[key] || x.userName || key;
-    if(!byPerson[label]) byPerson[label]={in:0,out:0};
-  });
-  incomes.forEach(i=>{
-    const key = USER_NAMES[i.userEmail||""] || i.userName;
-    if(!byPerson[key]) byPerson[key]={in:0,out:0};
-    byPerson[key].in+=Number(i.amount);
-  });
-  expenses.forEach(e=>{
-    const key = USER_NAMES[e.userEmail||""] || e.userName;
-    if(!byPerson[key]) byPerson[key]={in:0,out:0};
-    byPerson[key].out+=Number(e.amount);
-  });
+  incomes.forEach(i=>{ const k=i.userName||"—"; if(!byPerson[k]) byPerson[k]={in:0,out:0}; byPerson[k].in+=Number(i.amount); });
+  expenses.forEach(e=>{ const k=e.userName||"—"; if(!byPerson[k]) byPerson[k]={in:0,out:0}; byPerson[k].out+=Number(e.amount); });
 
   const saved=balance;
   const goalPct=goal>0?Math.min(100,Math.round((saved/goal)*100)):0;
 
   return(
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      {/* 3 cards resumo */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
         {[
           {label:"Entradas",val:fmt(totalIn), icon:"💰",color:"#10b981",sub:`${incomes.length} lançamentos`},
@@ -330,7 +297,6 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
         ))}
       </div>
 
-      {/* Meta */}
       <div style={S.card}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
           <span style={S.cardTitle}>🎯 Meta de Economia</span>
@@ -353,7 +319,6 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
         )}
       </div>
 
-      {/* Resumo por pessoa */}
       <div style={S.card}>
         <div style={S.cardTitle}>💑 Resumo por pessoa</div>
         {Object.entries(byPerson).map(([name,v])=>(
@@ -372,7 +337,6 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
         {Object.keys(byPerson).length===0 && <p style={S.empty}>Nenhum lançamento este mês</p>}
       </div>
 
-      {/* Receitas por categoria */}
       <div style={S.card}>
         <div style={S.cardTitle}>💰 Receitas por categoria</div>
         {Object.keys(byCatInc).length===0 && <p style={S.empty}>Nenhuma entrada registrada</p>}
@@ -391,7 +355,6 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
         })}
       </div>
 
-      {/* Gastos por categoria */}
       <div style={S.card}>
         <div style={S.cardTitle}>🏷️ Gastos por categoria</div>
         {Object.keys(byCatExp).length===0 && <p style={S.empty}>Nenhum gasto registrado</p>}
@@ -417,38 +380,23 @@ function ProgressBar({pct,color}){
   return <div style={{height:8,background:"#334155",borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:4,transition:"width .5s"}}/></div>;
 }
 
-// ================================================================
-// ITEM FORM (entrada ou gasto) — com "Lançar para"
-// ================================================================
-function ItemForm({type,categories,item,onSave,onClose,onAddCat,currentUser}){
+function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
   const isIncome=type==="income";
   const validCats=categories.filter(c=>c.type===type||c.type==="both");
-  const [desc,setDesc]   =useState(item?.description||"");
-  const [amt,setAmt]     =useState(item?.amount||"");
-  const [cat,setCat]     =useState(item?.category||(validCats[0]?.id||"outros"));
-  const [date,setDate]   =useState(item?.date||todayStr());
-  const [forUser,setForUser]=useState("self"); // "self" | email do outro
+  const [desc,setDesc]=useState(item?.description||"");
+  const [amt,setAmt]=useState(item?.amount||"");
+  const [cat,setCat]=useState(item?.category||(validCats[0]?.id||"outros"));
+  const [date,setDate]=useState(item?.date||todayStr());
   const [newCat,setNewCat]=useState(false);
   const [ncLabel,setNcLabel]=useState("");
   const [ncIcon,setNcIcon]=useState(isIncome?"💡":"📌");
   const [ncColor,setNcColor]=useState(isIncome?"#22c55e":"#6366f1");
 
-  const otherUser = KNOWN_USERS.find(u=>u.email!==currentUser?.email);
-
   const saveNewCat=()=>{
     if(!ncLabel)return;
     const id=ncLabel.toLowerCase().replace(/\s+/g,"_")+Date.now();
-    const nc={id,label:ncLabel,icon:ncIcon,color:ncColor,type};
-    onAddCat(nc); setCat(id); setNewCat(false); setNcLabel("");
-  };
-
-  const handleSave=()=>{
-    if(!desc||!amt)return;
-    const data={description:desc,amount:Number(amt),category:cat,date};
-    if(forUser!=="self"&&otherUser){
-      data.onBehalfOf={email:otherUser.email,name:otherUser.name};
-    }
-    onSave(data);
+    onAddCat({id,label:ncLabel,icon:ncIcon,color:ncColor,type});
+    setCat(id); setNewCat(false); setNcLabel("");
   };
 
   return(
@@ -458,24 +406,6 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat,currentUser}){
           <h3 style={{color:"#e2e8f0",fontWeight:800,fontSize:16,margin:0}}>{item?"Editar":"Nova"} {isIncome?"Entrada":"Despesa"}</h3>
           <button style={{background:"none",border:"none",color:"#94a3b8",fontSize:20,cursor:"pointer"}} onClick={onClose}>✕</button>
         </div>
-
-        {/* Lançar para */}
-        {!item && otherUser && (
-          <div style={S.fg}>
-            <label style={S.label}>Lançar para</label>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>setForUser("self")}
-                style={{flex:1,padding:"8px",borderRadius:8,border:`2px solid ${forUser==="self"?"#10b981":"#334155"}`,background:forUser==="self"?"#10b98122":"#0f172a",color:"#e2e8f0",cursor:"pointer",fontWeight:700,fontSize:13}}>
-                👤 Mim mesmo
-              </button>
-              <button onClick={()=>setForUser(otherUser.email)}
-                style={{flex:1,padding:"8px",borderRadius:8,border:`2px solid ${forUser!=="self"?"#6366f1":"#334155"}`,background:forUser!=="self"?"#6366f122":"#0f172a",color:"#e2e8f0",cursor:"pointer",fontWeight:700,fontSize:13}}>
-                👤 {otherUser.name}
-              </button>
-            </div>
-            {forUser!=="self" && <div style={{fontSize:11,color:"#f59e0b",marginTop:4}}>⚠️ Será registrado como lançamento de {otherUser.name}</div>}
-          </div>
-        )}
 
         <div style={S.fg}><label style={S.label}>Descrição</label>
           <input style={S.input} value={desc} onChange={e=>setDesc(e.target.value)} placeholder={isIncome?"Ex: Salário":"Ex: Aluguel"}/>
@@ -518,7 +448,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat,currentUser}){
           )}
         </div>
 
-        <button style={{...S.btnGreen,marginTop:8}} onClick={handleSave}>
+        <button style={{...S.btnGreen,marginTop:8}} onClick={()=>{ if(!desc||!amt)return; onSave({description:desc,amount:Number(amt),category:cat,date}); }}>
           {item?"Atualizar":"Salvar"} {isIncome?"entrada":"gasto"}
         </button>
       </div>
@@ -526,33 +456,58 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat,currentUser}){
   );
 }
 
-// ================================================================
-// INCOMES
-// ================================================================
-function Incomes({incomes,categories,currentUser,onAdd,onEdit,onDelete,onAddCat}){
+function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
   const [form,setForm]=useState(null);
+  const [filter,setFilter]=useState("all");
+  const filtered=filter==="all"?incomes:incomes.filter(i=>i.category===filter);
+  const activeCats=[...new Set(incomes.map(i=>i.category))].map(id=>categories.find(c=>c.id===id)).filter(Boolean);
+  const totalAll=incomes.reduce((s,i)=>s+Number(i.amount),0);
+  const totalFiltered=filtered.reduce((s,i)=>s+Number(i.amount),0);
+  const filterCat=filter!=="all"?categories.find(c=>c.id===filter):null;
   return(
     <div>
       <div style={S.secHeader}>
         <h2 style={S.secTitle}>💰 Entradas</h2>
         <button style={S.btnGreen} onClick={()=>setForm("new")}>+ Adicionar</button>
       </div>
-      {form && (
-        <ItemForm type="income" categories={categories} item={form==="new"?null:form}
-          currentUser={currentUser} onAddCat={onAddCat}
-          onSave={d=>{ form==="new"?onAdd(d):onEdit(form.id,d); setForm(null); }}
-          onClose={()=>setForm(null)}/>
+      {form && <ItemForm type="income" categories={categories} item={form==="new"?null:form} onAddCat={onAddCat} onSave={d=>{ form==="new"?onAdd(d):onEdit(form.id,d); setForm(null); }} onClose={()=>setForm(null)}/>}
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+        <button style={{...S.chip,...(filter==="all"?S.chipOn:{})}} onClick={()=>setFilter("all")}>Todos</button>
+        {activeCats.map(c=>(
+          <button key={c.id} style={{...S.chip,...(filter===c.id?{...S.chipOn,background:c.color}:{})}} onClick={()=>setFilter(filter===c.id?"all":c.id)}>
+            {c.icon} {c.label}
+          </button>
+        ))}
+      </div>
+      {filter!=="all" && filterCat && (
+        <div style={{...S.card,marginBottom:12,borderLeft:`4px solid ${filterCat.color}`,padding:"10px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontSize:12,color:"#94a3b8",fontWeight:600}}>{filterCat.icon} {filterCat.label}</div>
+              <div style={{fontSize:11,color:"#64748b",marginTop:2}}>{filtered.length} lançamento{filtered.length!==1?"s":""}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontWeight:900,fontSize:18,color:filterCat.color}}>+{fmt(totalFiltered)}</div>
+              <div style={{fontSize:11,color:"#64748b"}}>{totalAll>0?((totalFiltered/totalAll)*100).toFixed(1):0}% do total</div>
+            </div>
+          </div>
+        </div>
       )}
-      {incomes.length===0 && <p style={S.empty}>Nenhuma entrada este mês</p>}
-      {[...incomes].sort((a,b)=>b.createdAt-a.createdAt).map(inc=>{
+      {filter==="all" && incomes.length>0 && (
+        <div style={{...S.card,marginBottom:12,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:12,color:"#94a3b8",fontWeight:600}}>💰 Total do mês</div>
+          <div style={{fontWeight:900,fontSize:16,color:"#10b981"}}>+{fmt(totalAll)}</div>
+        </div>
+      )}
+      {filtered.length===0 && <p style={S.empty}>Nenhuma entrada {filter!=="all"?"nesta categoria":"este mês"}</p>}
+      {[...filtered].sort((a,b)=>b.createdAt-a.createdAt).map(inc=>{
         const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#10b981",label:"Renda"};
-        const name=USER_NAMES[inc.userEmail||""]||inc.userName||inc.userEmail||"—";
         return(
           <div key={inc.id} style={S.listItem}>
             <div style={{...S.listIcon,background:cat.color+"22",fontSize:20}}>{cat.icon}</div>
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:14}}>{inc.description}</div>
-              <div style={{fontSize:11,color:"#64748b"}}>{inc.date} · <span style={{color:"#6366f1",fontWeight:700}}>{name}</span> · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontSize:11,color:"#64748b"}}>{inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
             <div style={{fontWeight:800,fontSize:15,color:"#10b981"}}>+{fmt(inc.amount)}</div>
             <div style={{display:"flex",gap:4}}>
@@ -566,44 +521,58 @@ function Incomes({incomes,categories,currentUser,onAdd,onEdit,onDelete,onAddCat}
   );
 }
 
-// ================================================================
-// EXPENSES
-// ================================================================
-function Expenses({expenses,categories,currentUser,onAdd,onEdit,onDelete,onAddCat}){
+function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
   const [form,setForm]=useState(null);
   const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?expenses:expenses.filter(e=>e.category===filter);
   const activeCats=[...new Set(expenses.map(e=>e.category))].map(id=>categories.find(c=>c.id===id)).filter(Boolean);
+  const totalAll=expenses.reduce((s,e)=>s+Number(e.amount),0);
+  const totalFiltered=filtered.reduce((s,e)=>s+Number(e.amount),0);
+  const filterCat=filter!=="all"?categories.find(c=>c.id===filter):null;
   return(
     <div>
       <div style={S.secHeader}>
         <h2 style={S.secTitle}>💸 Gastos</h2>
         <button style={S.btnGreen} onClick={()=>setForm("new")}>+ Adicionar</button>
       </div>
-      {form && (
-        <ItemForm type="expense" categories={categories} item={form==="new"?null:form}
-          currentUser={currentUser} onAddCat={onAddCat}
-          onSave={d=>{ form==="new"?onAdd(d):onEdit(form.id,d); setForm(null); }}
-          onClose={()=>setForm(null)}/>
-      )}
+      {form && <ItemForm type="expense" categories={categories} item={form==="new"?null:form} onAddCat={onAddCat} onSave={d=>{ form==="new"?onAdd(d):onEdit(form.id,d); setForm(null); }} onClose={()=>setForm(null)}/>}
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
         <button style={{...S.chip,...(filter==="all"?S.chipOn:{})}} onClick={()=>setFilter("all")}>Todos</button>
         {activeCats.map(c=>(
-          <button key={c.id} style={{...S.chip,...(filter===c.id?{...S.chipOn,background:c.color}:{})}} onClick={()=>setFilter(c.id)}>
+          <button key={c.id} style={{...S.chip,...(filter===c.id?{...S.chipOn,background:c.color}:{})}} onClick={()=>setFilter(filter===c.id?"all":c.id)}>
             {c.icon} {c.label}
           </button>
         ))}
       </div>
+      {filter!=="all" && filterCat && (
+        <div style={{...S.card,marginBottom:12,borderLeft:`4px solid ${filterCat.color}`,padding:"10px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontSize:12,color:"#94a3b8",fontWeight:600}}>{filterCat.icon} {filterCat.label}</div>
+              <div style={{fontSize:11,color:"#64748b",marginTop:2}}>{filtered.length} lançamento{filtered.length!==1?"s":""}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontWeight:900,fontSize:18,color:filterCat.color}}>-{fmt(totalFiltered)}</div>
+              <div style={{fontSize:11,color:"#64748b"}}>{totalAll>0?((totalFiltered/totalAll)*100).toFixed(1):0}% do total</div>
+            </div>
+          </div>
+        </div>
+      )}
+      {filter==="all" && expenses.length>0 && (
+        <div style={{...S.card,marginBottom:12,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:12,color:"#94a3b8",fontWeight:600}}>💸 Total do mês</div>
+          <div style={{fontWeight:900,fontSize:16,color:"#ef4444"}}>-{fmt(totalAll)}</div>
+        </div>
+      )}
       {filtered.length===0 && <p style={S.empty}>Nenhum gasto {filter!=="all"?"nesta categoria":"este mês"}</p>}
       {[...filtered].sort((a,b)=>b.createdAt-a.createdAt).map(exp=>{
         const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#94a3b8",label:"Outros"};
-        const name=USER_NAMES[exp.userEmail||""]||exp.userName||"—";
         return(
           <div key={exp.id} style={S.listItem}>
             <div style={{...S.listIcon,background:cat.color+"22",fontSize:20}}>{cat.icon}</div>
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:14}}>{exp.description}</div>
-              <div style={{fontSize:11,color:"#64748b"}}>{exp.date} · <span style={{color:"#6366f1",fontWeight:700}}>{name}</span> · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontSize:11,color:"#64748b"}}>{exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
             <div style={{fontWeight:800,fontSize:15,color:"#ef4444"}}>-{fmt(exp.amount)}</div>
             <div style={{display:"flex",gap:4}}>
@@ -617,16 +586,10 @@ function Expenses({expenses,categories,currentUser,onAdd,onEdit,onDelete,onAddCa
   );
 }
 
-// ================================================================
-// HISTORY + PDF
-// ================================================================
 function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goal}){
   const [y,m]=month.split("-").map(Number);
   const monthLabel=`${MONTHS[m-1]} ${y}`;
-  const all=[
-    ...incomes.map(i=>({...i,kind:"income"})),
-    ...expenses.map(e=>({...e,kind:"expense"})),
-  ].sort((a,b)=>b.createdAt-a.createdAt);
+  const all=[...incomes.map(i=>({...i,kind:"income"})),...expenses.map(e=>({...e,kind:"expense"}))].sort((a,b)=>b.createdAt-a.createdAt);
 
   const generatePDF=()=>{
     const byCat={};
@@ -635,30 +598,19 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
       const cat=categories.find(c=>c.id===cid)||{label:cid,icon:"📦"};
       return `<tr><td>${cat.icon} ${cat.label}</td><td style="text-align:right;color:#ef4444">${fmt(v)}</td><td style="text-align:right">${totalOut>0?((v/totalOut)*100).toFixed(1)+"%":"-"}</td></tr>`;
     }).join("");
-    const incRows=incomes.map(i=>{
-      const cat=categories.find(c=>c.id===i.category)||{label:i.category,icon:"💰"};
-      const name=USER_NAMES[i.userEmail||""]||i.userName||"—";
-      return `<tr><td>${i.date}</td><td>${i.description}</td><td>${name}</td><td>${cat.icon} ${cat.label}</td><td style="color:#10b981;text-align:right">+${fmt(i.amount)}</td></tr>`;
-    }).join("");
-    const expRows=expenses.map(e=>{
-      const cat=categories.find(c=>c.id===e.category)||{label:e.category,icon:"📦"};
-      const name=USER_NAMES[e.userEmail||""]||e.userName||"—";
-      return `<tr><td>${e.date}</td><td>${e.description}</td><td>${name}</td><td>${cat.icon} ${cat.label}</td><td style="color:#ef4444;text-align:right">-${fmt(e.amount)}</td></tr>`;
-    }).join("");
+    const incRows=incomes.map(i=>{ const cat=categories.find(c=>c.id===i.category)||{label:i.category,icon:"💰"}; return `<tr><td>${i.date}</td><td>${i.description}</td><td>${i.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#10b981;text-align:right">+${fmt(i.amount)}</td></tr>`; }).join("");
+    const expRows=expenses.map(e=>{ const cat=categories.find(c=>c.id===e.category)||{label:e.category,icon:"📦"}; return `<tr><td>${e.date}</td><td>${e.description}</td><td>${e.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#ef4444;text-align:right">-${fmt(e.amount)}</td></tr>`; }).join("");
     const saved=totalIn-totalOut;
     const goalPct=goal>0?Math.min(100,((saved/goal)*100).toFixed(1))+"%":"—";
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>financeirU – ${monthLabel}</title>
-<style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:32px;color:#1e293b;max-width:800px;margin:0 auto;}h1{color:#10b981;font-size:28px;margin-bottom:4px;}h2{color:#6366f1;font-size:18px;margin:28px 0 10px;border-bottom:2px solid #e2e8f0;padding-bottom:6px;}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;}.card{border-radius:10px;padding:16px;text-align:center;}.card.green{background:#dcfce7;border:1px solid #86efac;}.card.red{background:#fee2e2;border:1px solid #fca5a5;}.card.blue{background:#ede9fe;border:1px solid #a5b4fc;}.card .val{font-size:20px;font-weight:900;margin:4px 0;}.card .lbl{font-size:12px;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:13px;}th{background:#f1f5f9;padding:8px 10px;text-align:left;font-weight:700;}td{padding:7px 10px;border-bottom:1px solid #f1f5f9;}.meta{background:#ede9fe;border-radius:8px;padding:16px;margin:16px 0;}.footer{text-align:center;font-size:11px;color:#94a3b8;margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;}@media print{button{display:none!important;}}</style></head><body>
-<h1>💚 financeirU</h1><p style="color:#64748b;font-size:14px;">Relatório mensal — <strong>${monthLabel}</strong></p>
-<div class="cards"><div class="card green"><div class="lbl">Entradas</div><div class="val" style="color:#16a34a">${fmt(totalIn)}</div><div class="lbl">${incomes.length} lançamentos</div></div><div class="card red"><div class="lbl">Gastos</div><div class="val" style="color:#dc2626">${fmt(totalOut)}</div><div class="lbl">${expenses.length} lançamentos</div></div><div class="card blue"><div class="lbl">Saldo</div><div class="val" style="color:${saved>=0?"#7c3aed":"#d97706"}">${fmt(saved)}</div><div class="lbl">${saved>=0?"✅ Positivo":"⚠️ Negativo"}</div></div></div>
-<div class="meta">🎯 Meta: <strong>${fmt(goal)}</strong> &nbsp;|&nbsp; Economizado: <strong>${fmt(saved)}</strong> &nbsp;|&nbsp; Progresso: <strong>${goalPct}</strong></div>
-<h2>💰 Entradas</h2><table><thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Categoria</th><th style="text-align:right">Valor</th></tr></thead><tbody>${incRows||"<tr><td colspan=5 style='text-align:center;color:#94a3b8'>Nenhuma entrada</td></tr>"}</tbody></table>
-<h2>💸 Gastos</h2><table><thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Categoria</th><th style="text-align:right">Valor</th></tr></thead><tbody>${expRows||"<tr><td colspan=5 style='text-align:center;color:#94a3b8'>Nenhum gasto</td></tr>"}</tbody></table>
-<h2>🏷️ Por categoria</h2><table><thead><tr><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th></tr></thead><tbody>${rows||"<tr><td colspan=3 style='text-align:center;color:#94a3b8'>Sem dados</td></tr>"}</tbody></table>
-<div class="footer">Gerado pelo financeirU em ${new Date().toLocaleDateString("pt-BR")}</div>
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>financeirU – ${monthLabel}</title><style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:32px;color:#1e293b;max-width:800px;margin:0 auto;}h1{color:#10b981;}h2{color:#6366f1;border-bottom:2px solid #e2e8f0;padding-bottom:6px;}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;}.card{border-radius:10px;padding:16px;text-align:center;}.green{background:#dcfce7;}.red{background:#fee2e2;}.blue{background:#ede9fe;}.val{font-size:20px;font-weight:900;margin:4px 0;}.lbl{font-size:12px;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:13px;}th{background:#f1f5f9;padding:8px;text-align:left;}td{padding:7px 8px;border-bottom:1px solid #f1f5f9;}.meta{background:#ede9fe;border-radius:8px;padding:16px;margin:16px 0;}@media print{button{display:none!important;}}</style></head><body>
+<h1>💚 financeirU — ${monthLabel}</h1>
+<div class="cards"><div class="card green"><div class="lbl">Entradas</div><div class="val" style="color:#16a34a">${fmt(totalIn)}</div></div><div class="card red"><div class="lbl">Gastos</div><div class="val" style="color:#dc2626">${fmt(totalOut)}</div></div><div class="card blue"><div class="lbl">Saldo</div><div class="val" style="color:${saved>=0?"#7c3aed":"#d97706"}">${fmt(saved)}</div></div></div>
+<div class="meta">🎯 Meta: <strong>${fmt(goal)}</strong> | Economizado: <strong>${fmt(saved)}</strong> | Progresso: <strong>${goalPct}</strong></div>
+<h2>💰 Entradas</h2><table><thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>${incRows||"<tr><td colspan=5>Nenhuma entrada</td></tr>"}</tbody></table>
+<h2>💸 Gastos</h2><table><thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>${expRows||"<tr><td colspan=5>Nenhum gasto</td></tr>"}</tbody></table>
+<h2>🏷️ Por categoria</h2><table><thead><tr><th>Categoria</th><th>Valor</th><th>%</th></tr></thead><tbody>${rows||"<tr><td colspan=3>Sem dados</td></tr>"}</tbody></table>
 <script>window.onload=()=>window.print();</script></body></html>`;
-    const blob=new Blob([html],{type:"text/html"});
-    window.open(URL.createObjectURL(blob),"_blank");
+    window.open(URL.createObjectURL(new Blob([html],{type:"text/html"})),"_blank");
   };
 
   return(
@@ -678,7 +630,6 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
       {all.map(item=>{
         const cat=categories.find(c=>c.id===item.category)||{icon:item.kind==="income"?"💰":"📦",color:item.kind==="income"?"#10b981":"#94a3b8",label:"—"};
         const isIn=item.kind==="income";
-        const name=USER_NAMES[item.userEmail||""]||item.userName||"—";
         return(
           <div key={item.id} style={S.listItem}>
             <div style={{...S.listIcon,background:cat.color+"22",fontSize:18}}>{cat.icon}</div>
@@ -687,7 +638,7 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
                 {item.description}
                 <span style={{fontSize:10,background:isIn?"#10b981":"#ef4444",color:"#fff",borderRadius:4,padding:"1px 5px"}}>{isIn?"ENTRADA":"GASTO"}</span>
               </div>
-              <div style={{fontSize:11,color:"#64748b"}}>{item.date} · <span style={{color:"#6366f1",fontWeight:700}}>{name}</span> · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontSize:11,color:"#64748b"}}>{item.date} · {item.userName||"—"} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
             <div style={{fontWeight:800,fontSize:14,color:isIn?"#10b981":"#ef4444"}}>{isIn?"+":"-"}{fmt(item.amount)}</div>
           </div>
@@ -697,9 +648,6 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
   );
 }
 
-// ================================================================
-// CATEGORIES
-// ================================================================
 function Categories({categories,expenses,incomes,onAdd,onEdit}){
   const [form,setForm]=useState(null);
   const [editItem,setEditItem]=useState(null);
@@ -783,9 +731,6 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
   );
 }
 
-// ================================================================
-// STYLES
-// ================================================================
 const S={
   root:{minHeight:"100vh",background:"#0f172a",color:"#e2e8f0",fontFamily:"'Nunito',sans-serif",paddingBottom:80},
   header:{background:"#1e293b",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #334155",position:"sticky",top:0,zIndex:10},
@@ -800,7 +745,7 @@ const S={
   loginRoot:{minHeight:"100vh",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center",padding:16},
   loginCard:{background:"#1e293b",borderRadius:16,padding:28,width:"100%",maxWidth:380,border:"1px solid #334155"},
   fg:{marginBottom:12},
-  label:{display:"block",fontSize:12,color:"#94a3b8",marginBottom:4,fontWeight:700,letterSpacing:"0.3px"},
+  label:{display:"block",fontSize:12,color:"#94a3b8",marginBottom:4,fontWeight:700},
   input:{width:"100%",background:"#0f172a",border:"1px solid #334155",borderRadius:8,padding:"10px 12px",color:"#e2e8f0",fontSize:14,boxSizing:"border-box",outline:"none"},
   btnGreen:{background:"#10b981",border:"none",color:"#fff",borderRadius:10,padding:"12px 20px",cursor:"pointer",fontWeight:800,fontSize:14,width:"100%"},
   btnGhost:{width:"100%",background:"#334155",border:"none",color:"#cbd5e1",borderRadius:10,padding:12,cursor:"pointer",fontWeight:600,fontSize:14},
