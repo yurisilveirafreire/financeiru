@@ -71,6 +71,7 @@ export default function App() {
   const [fb, setFb]             = useState(null);
   const [toast, setToast]       = useState(null);
   const [loading, setLoading]   = useState(false);
+  const [histData, setHistData] = useState([]); // comparativo meses
 
   const showToast = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3200); };
 
@@ -97,6 +98,30 @@ export default function App() {
     getDoc(doc(db,"goals",month)).then(d=>setGoal(d.exists()?d.data().amount:0));
     return ()=>{u1();u2();u3();};
   }, [fb, user, month, demo]);
+
+  // Busca últimos 6 meses para comparativo
+  useEffect(()=>{
+    if(demo){ 
+      setHistData([{month:"2025-05",totalIn:10500,totalOut:3035,balance:7465}]);
+      return;
+    }
+    if(!fb||!user) return;
+    const {collection,query,where,getDocs,db}=fb;
+    const [y,m]=month.split("-").map(Number);
+    const months=Array.from({length:6},(_,i)=>{
+      const d=new Date(y,m-1-i,1);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    });
+    Promise.all(months.map(async mo=>{
+      const [inc,exp]=await Promise.all([
+        getDocs(query(collection(db,"incomes"),where("month","==",mo))),
+        getDocs(query(collection(db,"expenses"),where("month","==",mo))),
+      ]);
+      const totalIn=inc.docs.reduce((s,d)=>s+Number(d.data().amount),0);
+      const totalOut=exp.docs.reduce((s,d)=>s+Number(d.data().amount),0);
+      return {month:mo,totalIn,totalOut,balance:totalIn-totalOut};
+    })).then(data=>setHistData(data.filter(d=>d.totalIn>0||d.totalOut>0)));
+  },[fb,user,month,demo]);
 
   const addItem = async (col, data) => {
     // 🛡️ TRAVA ANTI-SOBRESCRITA
@@ -186,11 +211,12 @@ export default function App() {
       <Header month={month} onMonth={setMonth} demo={demo} onLogout={handleLogout} />
       <Nav tab={tab} onTab={setTab} />
       <main style={S.main}>
-        {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} month={month} onGoal={saveGoal} />}
+        {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} month={month} onGoal={saveGoal} histData={histData} onTab={setTab} />}
         {tab==="incomes"    && <Incomes   incomes={incomes}   categories={categories} onAdd={d=>addItem("incomes",d)}  onEdit={(id,d)=>editItem("incomes",id,d)}  onDelete={id=>deleteItem("incomes",id)}  onAddCat={addCategory} />}
         {tab==="expenses"   && <Expenses  expenses={expenses} categories={categories} onAdd={d=>addItem("expenses",d)} onEdit={(id,d)=>editItem("expenses",id,d)} onDelete={id=>deleteItem("expenses",id)} onAddCat={addCategory} />}
         {tab==="history"    && <History   incomes={incomes}   expenses={expenses} categories={categories} month={month} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} />}
         {tab==="categories" && <Categories categories={categories} expenses={expenses} incomes={incomes} onAdd={addCategory} onEdit={editCategory} />}
+        {tab==="comparativo"&& <Comparativo histData={histData} month={month} />}
       </main>
     </div>
   );
@@ -250,6 +276,7 @@ function Nav({tab,onTab}){
     {id:"expenses",   icon:"💸",label:"Gastos"},
     {id:"history",    icon:"📋",label:"Histórico"},
     {id:"categories", icon:"🏷️",label:"Categorias"},
+    {id:"comparativo",icon:"📈",label:"Comparativo"},
   ];
   return(
     <nav style={S.nav}>
@@ -263,7 +290,7 @@ function Nav({tab,onTab}){
   );
 }
 
-function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,month,onGoal}){
+function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,month,onGoal,histData,onTab}){
   const [editGoal,setEditGoal]=useState(false);
   const [gInput,setGInput]=useState(goal);
 
@@ -372,6 +399,32 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
           );
         })}
       </div>
+
+      {/* Comparativo preview */}
+      {histData&&histData.length>0&&(
+        <div style={S.card}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <span style={S.cardTitle}>📈 Comparativo de meses</span>
+            <button style={S.btnSm} onClick={()=>onTab("comparativo")}>Ver tudo</button>
+          </div>
+          <div style={{display:"flex",gap:6,alignItems:"flex-end",height:80}}>
+            {[...histData].reverse().map((d,i)=>{
+              const [y2,m2]=d.month.split("-").map(Number);
+              const maxVal=Math.max(...histData.map(x=>x.totalOut),1);
+              const h=Math.round((d.totalOut/maxVal)*100);
+              const isCurrent=d.month===month;
+              return(
+                <div key={d.month} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                  <div style={{width:"100%",height:64,display:"flex",alignItems:"flex-end"}}>
+                    <div style={{width:"100%",height:`${h}%`,background:isCurrent?"#6366f1":"#334155",borderRadius:"3px 3px 0 0",minHeight:4}}/>
+                  </div>
+                  <span style={{fontSize:9,color:isCurrent?"#6366f1":"#64748b",fontWeight:isCurrent?800:400}}>{MONTHS[m2-1]}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -727,6 +780,54 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function Comparativo({histData,month}){
+  if(!histData||histData.length===0) return(
+    <div>
+      <h2 style={S.secTitle}>📈 Comparativo</h2>
+      <p style={S.empty}>Sem dados históricos ainda. Lance dados em meses anteriores para ver o comparativo.</p>
+    </div>
+  );
+  const sorted=[...histData].reverse();
+  const maxIn=Math.max(...sorted.map(d=>d.totalIn),1);
+  const maxOut=Math.max(...sorted.map(d=>d.totalOut),1);
+  const maxVal=Math.max(maxIn,maxOut);
+  return(
+    <div>
+      <div style={S.secHeader}>
+        <h2 style={S.secTitle}>📈 Comparativo</h2>
+      </div>
+      {sorted.map(d=>{
+        const [y2,m2]=d.month.split("-").map(Number);
+        const isCurrent=d.month===month;
+        const pctIn=Math.round((d.totalIn/maxVal)*100);
+        const pctOut=Math.round((d.totalOut/maxVal)*100);
+        return(
+          <div key={d.month} style={{...S.card,marginBottom:10,borderLeft:isCurrent?"4px solid #6366f1":"4px solid #334155"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <span style={{fontWeight:800,fontSize:14,color:isCurrent?"#6366f1":"#e2e8f0"}}>{MONTHS[m2-1]} {y2} {isCurrent?"← atual":""}</span>
+              <span style={{fontSize:12,fontWeight:700,color:d.balance>=0?"#10b981":"#ef4444"}}>{fmt(d.balance)}</span>
+            </div>
+            <div style={{marginBottom:6}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}>
+                <span style={{color:"#10b981"}}>💰 Entradas</span>
+                <span style={{color:"#10b981",fontWeight:700}}>{fmt(d.totalIn)}</span>
+              </div>
+              <ProgressBar pct={pctIn} color="#10b981"/>
+            </div>
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}>
+                <span style={{color:"#ef4444"}}>💸 Gastos</span>
+                <span style={{color:"#ef4444",fontWeight:700}}>{fmt(d.totalOut)}</span>
+              </div>
+              <ProgressBar pct={pctOut} color="#ef4444"/>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
