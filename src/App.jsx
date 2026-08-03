@@ -20,7 +20,12 @@ const PLANS = {
   pro_mensal: { name: "Pro Mensal", limit: Infinity, price: 19.90 },
   pro_anual:  { name: "Pro Anual",  limit: Infinity, price: 9.90 },
   influencer: { name: "Influencer", limit: Infinity, price: 0 },
+  admin:      { name: "Admin Pro",  limit: Infinity, price: 0 },
 };
+
+// E-mails com acesso Pro vitalício e gratuito (super admin)
+const ADMIN_EMAILS = ["yurisilveirafreire@hotmail.com"];
+const isAdminEmail = (email) => !!email && ADMIN_EMAILS.includes(email.toLowerCase());
 
 // ============================================================
 // FIREBASE
@@ -60,6 +65,8 @@ const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov
 const fmt = (v) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v||0);
 const todayStr = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
 const monthKey = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
+// Nome legível de categoria: remove sufixo técnico "_1783870137705" e deixa bonito
+const prettyCat = (cid) => String(cid||"").replace(/_\d{6,}$/,"").replace(/[_-]+/g," ").trim().replace(/^\w/, c=>c.toUpperCase()) || "Outros";
 
 // ============================================================
 // DEMO DATA
@@ -116,11 +123,12 @@ export default function App() {
           setUser(u);
           // Busca dados da conta do usuário
           const accountDoc = await f.getDoc(f.doc(f.db, "accounts", u.uid));
+          let data;
           if (accountDoc.exists()) {
-            setAccountData(accountDoc.data());
+            data = accountDoc.data();
           } else {
             // Cria conta nova no primeiro acesso
-            const newAccount = {
+            data = {
               ownerId: u.uid,
               ownerEmail: u.email,
               plan: "explorador",
@@ -130,9 +138,14 @@ export default function App() {
               state: "",
               displayName: u.displayName || u.email.split("@")[0],
             };
-            await f.setDoc(f.doc(f.db, "accounts", u.uid), newAccount);
-            setAccountData(newAccount);
+            await f.setDoc(f.doc(f.db, "accounts", u.uid), data);
           }
+          // Super admin: sempre Pro grátis (não depende de pagamento/webhook)
+          if (isAdminEmail(u.email) && data.plan !== "admin") {
+            data = { ...data, plan: "admin", planStatus: "active" };
+            await f.setDoc(f.doc(f.db, "accounts", u.uid), { plan: "admin", planStatus: "active" }, { merge: true });
+          }
+          setAccountData(data);
           setScreen("app");
         } else {
           setScreen("login");
@@ -179,7 +192,12 @@ export default function App() {
     );
     const u3 = onSnapshot(
       query(collection(db,"categories"), where("accountId","==",accountId)),
-      s => { const c=s.docs.map(d=>({id:d.id,...d.data()})); setCategories(c.length?c:DEFAULT_CATEGORIES); }
+      s => {
+        const custom = s.docs.map(d=>({ ...d.data(), id: d.data().id || d.id }));
+        // Sempre mantém as categorias padrão + as personalizadas (sem duplicar)
+        const merged = [...DEFAULT_CATEGORIES.filter(dc=>!custom.some(c=>c.id===dc.id)), ...custom];
+        setCategories(merged);
+      }
     );
     getDoc(doc(db,"goals",`${accountId}_${month}`)).then(d=>setGoal(d.exists()?d.data().amount:0));
     return ()=>{u1();u2();u3();};
@@ -366,8 +384,8 @@ function LoginScreen({onLogin,onDemo,loading,toast}){
 
         {reg && (
           <div style={S.fg}>
-            <label style={S.label}>Seu nome</label>
-            <input style={S.input} value={name} onChange={e=>setName(e.target.value)} placeholder="Como quer ser chamado?"/>
+            <label style={S.label}>Como você quer ser chamado</label>
+            <input style={S.input} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex: Yuri, Ju, Pedrão..."/>
           </div>
         )}
 
@@ -586,7 +604,7 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
         <div style={{...S.card,marginBottom:14}}>
           <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:12}}>🏷️ Gastos por categoria</div>
           {Object.entries(byCatExp).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cid,val])=>{
-            const cat=categories.find(c=>c.id===cid)||{label:cid,icon:"📦",color:"#94a3b8"};
+            const cat=categories.find(c=>c.id===cid)||{label:prettyCat(cid),icon:"📦",color:"#94a3b8"};
             const pct=totalOut>0?(val/totalOut)*100:0;
             return(
               <div key={cid} style={{marginBottom:10}}>
@@ -765,7 +783,7 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
 
       {filtered.length===0 && <p style={S.empty}>Nenhuma entrada {filter!=="all"?"nesta categoria":"este mês"}</p>}
       {[...filtered].sort((a,b)=>b.createdAt-a.createdAt).map(inc=>{
-        const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#00FF88",label:"Renda"};
+        const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#00FF88",label:prettyCat(inc.category)};
         return(
           <div key={inc.id} style={S.listItem}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
@@ -837,7 +855,7 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
 
       {filtered.length===0 && <p style={S.empty}>Nenhum gasto {filter!=="all"?"nesta categoria":"este mês"}</p>}
       {[...filtered].sort((a,b)=>b.createdAt-a.createdAt).map(exp=>{
-        const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#94a3b8",label:"Outros"};
+        const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#94a3b8",label:prettyCat(exp.category)};
         return(
           <div key={exp.id} style={S.listItem}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
@@ -869,11 +887,11 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
     const byCat={};
     expenses.forEach(e=>{ byCat[e.category]=(byCat[e.category]||0)+Number(e.amount); });
     const rows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cid,v])=>{
-      const cat=categories.find(c=>c.id===cid)||{label:cid,icon:"📦"};
+      const cat=categories.find(c=>c.id===cid)||{label:prettyCat(cid),icon:"📦"};
       return `<tr><td>${cat.icon} ${cat.label}</td><td style="text-align:right;color:#FF3D7F">${fmt(v)}</td><td style="text-align:right">${totalOut>0?((v/totalOut)*100).toFixed(1)+"%":"-"}</td></tr>`;
     }).join("");
-    const incRows=incomes.map(i=>{ const cat=categories.find(c=>c.id===i.category)||{label:i.category,icon:"💰"}; return `<tr><td>${i.date}</td><td>${i.description}</td><td>${i.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#00FF88;text-align:right">+${fmt(i.amount)}</td></tr>`; }).join("");
-    const expRows=expenses.map(e=>{ const cat=categories.find(c=>c.id===e.category)||{label:e.category,icon:"📦"}; return `<tr><td>${e.date}</td><td>${e.description}</td><td>${e.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#FF3D7F;text-align:right">-${fmt(e.amount)}</td></tr>`; }).join("");
+    const incRows=incomes.map(i=>{ const cat=categories.find(c=>c.id===i.category)||{label:prettyCat(i.category),icon:"💰"}; return `<tr><td>${i.date}</td><td>${i.description}</td><td>${i.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#00FF88;text-align:right">+${fmt(i.amount)}</td></tr>`; }).join("");
+    const expRows=expenses.map(e=>{ const cat=categories.find(c=>c.id===e.category)||{label:prettyCat(e.category),icon:"📦"}; return `<tr><td>${e.date}</td><td>${e.description}</td><td>${e.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#FF3D7F;text-align:right">-${fmt(e.amount)}</td></tr>`; }).join("");
     const saved=totalIn-totalOut;
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>iGastei – ${monthLabel}</title><style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:32px;color:#1e293b;max-width:800px;margin:0 auto;background:#f8fafc;}h1{color:#0D0D1A;font-size:26px;}h2{color:#6366f1;font-size:16px;margin:24px 0 8px;border-bottom:2px solid #e2e8f0;padding-bottom:4px;}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}.card{border-radius:10px;padding:14px;text-align:center;}.g{background:#dcfce7;}.r{background:#fee2e2;}.b{background:#ede9fe;}.val{font-size:18px;font-weight:900;margin:4px 0;}.lbl{font-size:11px;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f1f5f9;padding:7px 8px;text-align:left;font-weight:700;}td{padding:6px 8px;border-bottom:1px solid #f1f5f9;}.meta{background:#ede9fe;border-radius:8px;padding:12px;margin:12px 0;font-size:13px;}@media print{button{display:none!important;}}</style></head><body>
 <h1>💸 iGastei — ${monthLabel}</h1>
@@ -900,7 +918,7 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
       </div>
       {all.length===0 && <p style={S.empty}>Nenhum lançamento este mês</p>}
       {all.map(item=>{
-        const cat=categories.find(c=>c.id===item.category)||{icon:item.kind==="income"?"💰":"📦",color:item.kind==="income"?"#00FF88":"#94a3b8",label:"—"};
+        const cat=categories.find(c=>c.id===item.category)||{icon:item.kind==="income"?"💰":"📦",color:item.kind==="income"?"#00FF88":"#94a3b8",label:prettyCat(item.category)};
         const isIn=item.kind==="income";
         return(
           <div key={item.id} style={S.listItem}>
@@ -1088,8 +1106,9 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
       {/* Dados pessoais */}
       <div style={S.card}>
         <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:12}}>✏️ Dados pessoais</div>
-        <div style={S.fg}><label style={S.label}>Nome</label>
-          <input style={S.input} value={name} onChange={e=>setName(e.target.value)}/>
+        <div style={S.fg}><label style={S.label}>Como você quer ser chamado</label>
+          <input style={S.input} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex: Yuri"/>
+          <div style={{fontSize:10,color:"#475569",marginTop:3}}>É esse nome que aparece no “olá 👋” lá em cima</div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <div style={{...S.fg,flex:2}}><label style={S.label}>Cidade</label>
