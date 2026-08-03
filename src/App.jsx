@@ -96,6 +96,14 @@ export default function App() {
   const [toast, setToast]       = useState(null);
   const [loading, setLoading]   = useState(false);
   const [histData, setHistData] = useState([]);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Detecta ?upgrade=success na URL
+  useEffect(()=>{
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('upgrade')==='success'){ setShowSuccess(true); window.history.replaceState({}, '', '/'); }
+  },[]);
 
   const showToast = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3200); };
 
@@ -312,17 +320,19 @@ export default function App() {
   return (
     <div style={S.root}>
       {toast && <div style={{...S.toast, background: toast.type==="error"?"#FF3D7F":toast.type==="info"?"#6366f1":"#00FF88", color: toast.type==="success"?"#0D0D1A":"#fff"}}>{toast.msg}</div>}
+      {showUpgrade && <UpgradeScreen user={user} accountData={accountData} fb={fb} onClose={()=>setShowUpgrade(false)}/>}
+      {showSuccess && <UpgradeSuccess onClose={()=>setShowSuccess(false)}/>}
       <Header month={month} onMonth={setMonth} demo={demo} onLogout={handleLogout}
         user={user} accountData={accountData} planInfo={planInfo}
         totalLancamentos={totalLancamentos} planUsagePct={planUsagePct} />
       <main style={S.main}>
-        {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} month={month} onGoal={saveGoal} histData={histData} onTab={setTab} planInfo={planInfo} totalLancamentos={totalLancamentos} />}
+        {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} month={month} onGoal={saveGoal} histData={histData} onTab={setTab} planInfo={planInfo} totalLancamentos={totalLancamentos} onUpgrade={()=>setShowUpgrade(true)} />}
         {tab==="incomes"    && <Incomes   incomes={incomes}   categories={categories} onAdd={d=>addItem("incomes",d)}  onEdit={(id,d)=>editItem("incomes",id,d)}  onDelete={id=>deleteItem("incomes",id)}  onAddCat={addCategory} />}
         {tab==="expenses"   && <Expenses  expenses={expenses} categories={categories} onAdd={d=>addItem("expenses",d)} onEdit={(id,d)=>editItem("expenses",id,d)} onDelete={id=>deleteItem("expenses",id)} onAddCat={addCategory} />}
         {tab==="history"    && <History   incomes={incomes}   expenses={expenses} categories={categories} month={month} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} />}
         {tab==="categories" && <Categories categories={categories} expenses={expenses} incomes={incomes} onAdd={addCategory} onEdit={editCategory} />}
         {tab==="comparativo"&& <Comparativo histData={histData} month={month} />}
-        {tab==="account"    && <AccountSettings accountData={accountData} user={user} fb={fb} onSave={async (data)=>{ await fb.setDoc(fb.doc(fb.db,"accounts",user.uid),{...accountData,...data},{merge:true}); setAccountData(p=>({...p,...data})); showToast("Conta atualizada ✅"); }} />}
+        {tab==="account"    && <AccountSettings accountData={accountData} user={user} fb={fb} onUpgrade={()=>setShowUpgrade(true)} onSave={async (data)=>{ await fb.setDoc(fb.doc(fb.db,"accounts",user.uid),{...accountData,...data},{merge:true}); setAccountData(p=>({...p,...data})); showToast("Conta atualizada ✅"); }} />}
       </main>
       <BottomNav tab={tab} onTab={setTab} />
     </div>
@@ -472,7 +482,7 @@ function BottomNav({tab,onTab}){
 // ============================================================
 // DASHBOARD
 // ============================================================
-function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,month,onGoal,histData,onTab,planInfo,totalLancamentos}){
+function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,month,onGoal,histData,onTab,planInfo,totalLancamentos,onUpgrade}){
   const [editGoal,setEditGoal]=useState(false);
   const [gInput,setGInput]=useState(goal);
   const saved=balance;
@@ -1032,7 +1042,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
 // ============================================================
 // ACCOUNT SETTINGS
 // ============================================================
-function AccountSettings({accountData,user,fb,onSave}){
+function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
   const [name,setName]=useState(accountData?.displayName||"");
   const [city,setCity]=useState(accountData?.city||"");
   const [state,setState]=useState(accountData?.state||"SP");
@@ -1067,7 +1077,7 @@ function AccountSettings({accountData,user,fb,onSave}){
             <div style={{fontSize:11,color:"#475569",marginTop:2}}>{plan.limit===Infinity?"lançamentos ilimitados":`${plan.limit} lançamentos/mês`}</div>
           </div>
           {accountData?.plan==="explorador" && (
-            <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,color:"#0D0D1A",cursor:"pointer"}}>
+            <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>
               Fazer upgrade ⚡
             </button>
           )}
@@ -1116,6 +1126,209 @@ function AccountSettings({accountData,user,fb,onSave}){
     </div>
   );
 }
+
+function UpgradeScreen({ user, accountData, fb, onClose }) {
+  const [loading, setLoading]   = useState(null); // "pro_mensal" | "pro_anual"
+  const [coupon, setCoupon]     = useState("");
+  const [couponMsg, setCouponMsg] = useState(null);
+  const [couponData, setCouponData] = useState(null);
+
+  const currentPlan = accountData?.plan || "explorador";
+
+  const checkout = async (plan) => {
+    if (!fb || !user) return;
+    setLoading(plan);
+    try {
+      const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
+      const functions = getFunctions(fb.auth.app, "southamerica-east1");
+      const createCheckout = httpsCallable(functions, "createCheckoutSession");
+
+      const origin = window.location.origin;
+      const result = await createCheckout({
+        plan,
+        successUrl: `${origin}?upgrade=success`,
+        cancelUrl:  `${origin}?upgrade=cancel`,
+        couponCode: couponData?.type === "discount" ? coupon : null,
+      });
+      window.location.href = result.data.url;
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao abrir checkout: " + e.message);
+    }
+    setLoading(null);
+  };
+
+  const validateCoupon = async () => {
+    if (!coupon || !fb) return;
+    try {
+      const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
+      const functions = getFunctions(fb.auth.app, "southamerica-east1");
+      const validate = httpsCallable(functions, "validateCoupon");
+      const result = await validate({ code: coupon });
+      setCouponData(result.data);
+      if (result.data.type === "influencer") {
+        setCouponMsg({ text: "✅ Acesso Influencer ativado! Recarregando...", ok: true });
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setCouponMsg({ text: `✅ Cupom válido! ${result.data.discount}% de desconto aplicado.`, ok: true });
+      }
+    } catch (e) {
+      setCouponMsg({ text: "❌ " + (e.message || "Cupom inválido ou expirado."), ok: false });
+    }
+  };
+
+  const manageSubscription = async () => {
+    if (!fb || !user) return;
+    try {
+      const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
+      const functions = getFunctions(fb.auth.app, "southamerica-east1");
+      const createPortal = httpsCallable(functions, "createPortalSession");
+      const result = await createPortal({ returnUrl: window.location.origin });
+      window.location.href = result.data.url;
+    } catch (e) {
+      alert("Erro: " + e.message);
+    }
+  };
+
+  const plans = [
+    {
+      id: "pro_mensal",
+      name: "Pro Mensal",
+      icon: "🚀",
+      price: couponData?.discount ? (19.90 * (1 - couponData.discount / 100)).toFixed(2) : "19,90",
+      originalPrice: couponData?.discount ? "19,90" : null,
+      period: "/mês",
+      features: ["Lançamentos ilimitados", "Até 4 pessoas na conta", "Comparativo de meses", "Relatório PDF", "Suporte prioritário"],
+      color: "#00FF88",
+      featured: false,
+    },
+    {
+      id: "pro_anual",
+      name: "Pro Anual",
+      icon: "💎",
+      price: couponData?.discount ? (118.80 * (1 - couponData.discount / 100)).toFixed(2) : "118,80",
+      originalPrice: couponData?.discount ? "118,80" : null,
+      period: "/ano",
+      sub: "equivale a R$9,90/mês",
+      features: ["Tudo do Pro Mensal", "Histórico completo", "Economize 50%", "Prioridade máxima"],
+      color: "#FFD60A",
+      featured: true,
+    },
+  ];
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+      onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#111827",borderRadius:"20px 20px 0 0",padding:24,width:"100%",maxWidth:500,maxHeight:"92vh",overflowY:"auto",border:"1px solid #1e2035"}}>
+
+        {/* Header */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <div>
+            <div style={{fontWeight:900,fontSize:20,color:"#e2e8f0"}}>⚡ Fazer upgrade</div>
+            <div style={{fontSize:12,color:"#6b7280",marginTop:2}}>Desbloqueie tudo no iGastei</div>
+          </div>
+          <button style={{background:"none",border:"none",color:"#6b7280",fontSize:22,cursor:"pointer"}} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Gerenciar assinatura (se já for pro) */}
+        {currentPlan !== "explorador" && currentPlan !== "influencer" && (
+          <div style={{background:"#00FF8815",border:"1px solid #00FF8833",borderRadius:12,padding:14,marginBottom:16}}>
+            <div style={{fontSize:13,color:"#00FF88",fontWeight:700,marginBottom:4}}>✅ Você já tem o plano {currentPlan === "pro_mensal" ? "Pro Mensal" : "Pro Anual"}</div>
+            <div style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Gerencie sua assinatura, veja faturas ou cancele quando quiser.</div>
+            <button style={{background:"#1e2035",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"10px 16px",cursor:"pointer",fontWeight:700,fontSize:13,width:"100%"}}
+              onClick={manageSubscription}>
+              Gerenciar assinatura →
+            </button>
+          </div>
+        )}
+
+        {/* Planos */}
+        {(currentPlan === "explorador" || currentPlan === "influencer") && (
+          <>
+            {plans.map(p => (
+              <div key={p.id} style={{background:"#0D0D1A",border:`2px solid ${p.featured ? p.color+"44" : "#1e2035"}`,borderRadius:14,padding:16,marginBottom:12,position:"relative"}}>
+                {p.featured && (
+                  <div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:`linear-gradient(135deg,${p.color},#00FF88)`,color:"#0D0D1A",borderRadius:20,padding:"3px 14px",fontSize:10,fontWeight:900,whiteSpace:"nowrap"}}>
+                    ⭐ Mais econômico
+                  </div>
+                )}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+                  <div>
+                    <div style={{fontWeight:800,fontSize:15,color:"#e2e8f0"}}>{p.icon} {p.name}</div>
+                    {p.sub && <div style={{fontSize:10,color:"#6b7280",marginTop:2}}>{p.sub}</div>}
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    {p.originalPrice && <div style={{fontSize:11,color:"#475569",textDecoration:"line-through"}}>R${p.originalPrice}</div>}
+                    <div style={{fontWeight:900,fontSize:22,color:p.color}}>R${p.price}</div>
+                    <div style={{fontSize:10,color:"#6b7280"}}>{p.period}</div>
+                  </div>
+                </div>
+                <div style={{marginBottom:14}}>
+                  {p.features.map(f => (
+                    <div key={f} style={{fontSize:12,color:"#94a3b8",padding:"4px 0",display:"flex",gap:8,alignItems:"center"}}>
+                      <span style={{color:p.color,fontWeight:700}}>✓</span> {f}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  style={{width:"100%",background:`linear-gradient(135deg,${p.color},${p.featured?"#00FF88":"#FFD60A"})`,border:"none",borderRadius:12,padding:"13px",fontWeight:900,fontSize:14,color:"#0D0D1A",cursor:"pointer",opacity:loading?0.7:1}}
+                  onClick={()=>checkout(p.id)}
+                  disabled={!!loading}>
+                  {loading===p.id ? "Abrindo checkout..." : `Assinar ${p.name} →`}
+                </button>
+              </div>
+            ))}
+
+            {/* Cupom */}
+            <div style={{background:"#0D0D1A",border:"1px solid #1e2035",borderRadius:12,padding:14,marginTop:4}}>
+              <div style={{fontSize:12,color:"#6b7280",fontWeight:700,marginBottom:8}}>🎟️ Tem um cupom?</div>
+              <div style={{display:"flex",gap:8}}>
+                <input
+                  style={{flex:1,background:"#111827",border:"1px solid #1e2035",borderRadius:8,padding:"9px 12px",color:"#e2e8f0",fontSize:13,outline:"none"}}
+                  value={coupon} onChange={e=>setCoupon(e.target.value.toUpperCase())}
+                  placeholder="CÓDIGO DO CUPOM"/>
+                <button
+                  style={{background:"#1e2035",border:"none",color:"#e2e8f0",borderRadius:8,padding:"0 14px",cursor:"pointer",fontWeight:700,fontSize:12}}
+                  onClick={validateCoupon}>
+                  Aplicar
+                </button>
+              </div>
+              {couponMsg && (
+                <div style={{fontSize:11,color:couponMsg.ok?"#00FF88":"#FF3D7F",marginTop:6,fontWeight:600}}>{couponMsg.text}</div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Segurança */}
+        <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:16,flexWrap:"wrap"}}>
+          {["🔒 Pagamento seguro","↩️ Cancele quando quiser","🇧🇷 Suporte em português"].map(t=>(
+            <div key={t} style={{fontSize:10,color:"#475569"}}>{t}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PÁGINA DE SUCESSO (detecta ?upgrade=success na URL)
+// ============================================================
+function UpgradeSuccess({ onClose }) {
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{background:"#111827",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",border:"1px solid #00FF8833"}}>
+        <div style={{fontSize:60,marginBottom:16}}>🎉</div>
+        <div style={{fontWeight:900,fontSize:22,color:"#00FF88",marginBottom:8}}>Bem-vindo ao Pro!</div>
+        <div style={{fontSize:14,color:"#6b7280",marginBottom:24,lineHeight:1.6}}>Seu plano foi ativado. Agora você tem acesso completo ao iGastei sem limites!</div>
+        <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:12,padding:"13px 24px",fontWeight:900,fontSize:14,color:"#0D0D1A",cursor:"pointer",width:"100%"}} onClick={onClose}>
+          Usar o iGastei →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 // ============================================================
 // STYLES
