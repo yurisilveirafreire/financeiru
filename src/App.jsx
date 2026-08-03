@@ -1140,7 +1140,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
     setLoading(plan);
     try {
       const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
-      const functions = getFunctions(fb.auth.app, "southamerica-east1");
+      const functions = getFunctions(fb.auth.app, "us-central1");
       const createCheckout = httpsCallable(functions, "createCheckoutSession");
 
       const origin = window.location.origin;
@@ -1162,7 +1162,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
     if (!coupon || !fb) return;
     try {
       const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
-      const functions = getFunctions(fb.auth.app, "southamerica-east1");
+      const functions = getFunctions(fb.auth.app, "us-central1");
       const validate = httpsCallable(functions, "validateCoupon");
       const result = await validate({ code: coupon });
       setCouponData(result.data);
@@ -1181,7 +1181,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
     if (!fb || !user) return;
     try {
       const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
-      const functions = getFunctions(fb.auth.app, "southamerica-east1");
+      const functions = getFunctions(fb.auth.app, "us-central1");
       const createPortal = httpsCallable(functions, "createPortalSession");
       const result = await createPortal({ returnUrl: window.location.origin });
       window.location.href = result.data.url;
