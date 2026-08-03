@@ -506,7 +506,7 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
               <div style={{fontSize:12,color:"#00FF88",fontWeight:800}}>🎮 Modo Explorador</div>
               <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{totalLancamentos}/10 lançamentos este mês</div>
             </div>
-            <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:8,padding:"6px 12px",fontWeight:800,fontSize:12,color:"#0D0D1A",cursor:"pointer"}}>
+            <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:8,padding:"6px 12px",fontWeight:800,fontSize:12,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>
               Fazer upgrade ⚡
             </button>
           </div>
