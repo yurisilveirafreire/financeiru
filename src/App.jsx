@@ -169,12 +169,12 @@ export default function App() {
 
     // Dados são filtrados por accountId para que membros vejam o mesmo
     const u1 = onSnapshot(
-      query(collection(db,"incomes"), where("accountId","==",accountId), where("month","==",month)),
-      s => setIncomes(s.docs.map(d=>({id:d.id,...d.data()})))
+      query(collection(db,"incomes"), where("month","==",month)),
+      s => setIncomes(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>!d.accountId||d.accountId===accountId||d.userId===user.uid))
     );
     const u2 = onSnapshot(
-      query(collection(db,"expenses"), where("accountId","==",accountId), where("month","==",month)),
-      s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()})))
+      query(collection(db,"expenses"), where("month","==",month)),
+      s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>!d.accountId||d.accountId===accountId||d.userId===user.uid))
     );
     const u3 = onSnapshot(
       query(collection(db,"categories"), where("accountId","==",accountId)),
