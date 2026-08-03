@@ -1333,8 +1333,6 @@ function UpgradeSuccess({ onClose }) {
 // ============================================================
 // STYLES
 // ============================================================
-const STATES_BR = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
-
 const S={
   root:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:90},
   header:{background:"#0D0D1A",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #1e2035",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(10px)"},
