@@ -102,7 +102,8 @@ export default function App() {
   // Detecta ?upgrade=success na URL
   useEffect(()=>{
     const params = new URLSearchParams(window.location.search);
-    if(params.get('upgrade')==='success'){ setShowSuccess(true); window.history.replaceState({}, '', '/'); }
+    const up = params.get('upgrade');
+    if(up && up.indexOf('success')===0){ setShowSuccess(true); window.history.replaceState({}, '', '/'); }
   },[]);
 
   const showToast = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3200); };
@@ -1129,9 +1130,6 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
 
 function UpgradeScreen({ user, accountData, fb, onClose }) {
   const [loading, setLoading]   = useState(null); // "pro_mensal" | "pro_anual"
-  const [coupon, setCoupon]     = useState("");
-  const [couponMsg, setCouponMsg] = useState(null);
-  const [couponData, setCouponData] = useState(null);
 
   const currentPlan = accountData?.plan || "explorador";
 
@@ -1148,7 +1146,6 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
         plan,
         successUrl: `${origin}?upgrade=success`,
         cancelUrl:  `${origin}?upgrade=cancel`,
-        couponCode: couponData?.type === "discount" ? coupon : null,
       });
       window.location.href = result.data.url;
     } catch (e) {
@@ -1156,25 +1153,6 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
       alert("Erro ao abrir checkout: " + e.message);
     }
     setLoading(null);
-  };
-
-  const validateCoupon = async () => {
-    if (!coupon || !fb) return;
-    try {
-      const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
-      const functions = getFunctions(fb.auth.app, "us-central1");
-      const validate = httpsCallable(functions, "validateCoupon");
-      const result = await validate({ code: coupon });
-      setCouponData(result.data);
-      if (result.data.type === "influencer") {
-        setCouponMsg({ text: "✅ Acesso Influencer ativado! Recarregando...", ok: true });
-        setTimeout(() => window.location.reload(), 2000);
-      } else {
-        setCouponMsg({ text: `✅ Cupom válido! ${result.data.discount}% de desconto aplicado.`, ok: true });
-      }
-    } catch (e) {
-      setCouponMsg({ text: "❌ " + (e.message || "Cupom inválido ou expirado."), ok: false });
-    }
   };
 
   const manageSubscription = async () => {
@@ -1195,8 +1173,8 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
       id: "pro_mensal",
       name: "Pro Mensal",
       icon: "🚀",
-      price: couponData?.discount ? (19.90 * (1 - couponData.discount / 100)).toFixed(2) : "19,90",
-      originalPrice: couponData?.discount ? "19,90" : null,
+      price: "19,90",
+      originalPrice: null,
       period: "/mês",
       features: ["Lançamentos ilimitados", "Até 4 pessoas na conta", "Comparativo de meses", "Relatório PDF", "Suporte prioritário"],
       color: "#00FF88",
@@ -1206,8 +1184,8 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
       id: "pro_anual",
       name: "Pro Anual",
       icon: "💎",
-      price: couponData?.discount ? (118.80 * (1 - couponData.discount / 100)).toFixed(2) : "118,80",
-      originalPrice: couponData?.discount ? "118,80" : null,
+      price: "118,80",
+      originalPrice: null,
       period: "/ano",
       sub: "equivale a R$9,90/mês",
       features: ["Tudo do Pro Mensal", "Histórico completo", "Economize 50%", "Prioridade máxima"],
@@ -1278,25 +1256,6 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
                 </button>
               </div>
             ))}
-
-            {/* Cupom */}
-            <div style={{background:"#0D0D1A",border:"1px solid #1e2035",borderRadius:12,padding:14,marginTop:4}}>
-              <div style={{fontSize:12,color:"#6b7280",fontWeight:700,marginBottom:8}}>🎟️ Tem um cupom?</div>
-              <div style={{display:"flex",gap:8}}>
-                <input
-                  style={{flex:1,background:"#111827",border:"1px solid #1e2035",borderRadius:8,padding:"9px 12px",color:"#e2e8f0",fontSize:13,outline:"none"}}
-                  value={coupon} onChange={e=>setCoupon(e.target.value.toUpperCase())}
-                  placeholder="CÓDIGO DO CUPOM"/>
-                <button
-                  style={{background:"#1e2035",border:"none",color:"#e2e8f0",borderRadius:8,padding:"0 14px",cursor:"pointer",fontWeight:700,fontSize:12}}
-                  onClick={validateCoupon}>
-                  Aplicar
-                </button>
-              </div>
-              {couponMsg && (
-                <div style={{fontSize:11,color:couponMsg.ok?"#00FF88":"#FF3D7F",marginTop:6,fontWeight:600}}>{couponMsg.text}</div>
-              )}
-            </div>
           </>
         )}
 

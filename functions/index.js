@@ -32,10 +32,10 @@ exports.createCheckoutSession = onCall({ secrets: [stripeSecretKey] }, async (re
     payment_method_types: ["card"],
     mode: "subscription",
     line_items: [{ price: PRICES[plan], quantity: 1 }],
-    success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+    success_url: `${successUrl}&session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
     cancel_url: cancelUrl,
     locale: "pt-BR",
-    allow_promotion_codes: true,
+    allow_promotion_codes: false,
     subscription_data: { metadata: { firebaseUID: uid, plan } },
   });
   return { url: session.url };
