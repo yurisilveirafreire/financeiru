@@ -1,0 +1,12 @@
+{
+  "name": "igastei-functions",
+  "description": "Firebase Functions iGastei",
+  "scripts": { "deploy": "firebase deploy --only functions" },
+  "engines": { "node": "22" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^6.0.0",
+    "stripe": "^14.0.0"
+  }
+}
