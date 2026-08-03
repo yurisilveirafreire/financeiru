@@ -66,7 +66,9 @@ const fmt = (v) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL
 const todayStr = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
 const monthKey = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
 // Nome legível de categoria: remove sufixo técnico "_1783870137705" e deixa bonito
-const prettyCat = (cid) => String(cid||"").replace(/_\d{6,}$/,"").replace(/[_-]+/g," ").trim().replace(/^\w/, c=>c.toUpperCase()) || "Outros";
+const prettyCat = (cid) => String(cid||"").replace(/[_-]?\d{9,}$/,"").replace(/[_-]+/g," ").trim().replace(/^\w/, c=>c.toUpperCase()) || "Outros";
+// Resolve categoria: acha na lista ou cria um fallback limpo (nome sem números)
+const catOf = (categories, id, icon="📦", color="#94a3b8") => categories.find(c=>c.id===id) || { id, label:prettyCat(id), icon, color };
 
 // ============================================================
 // DEMO DATA
@@ -121,27 +123,32 @@ export default function App() {
       f.onAuthStateChanged(f.auth, async u => {
         if (u) {
           setUser(u);
-          // Busca dados da conta do usuário
-          const accountDoc = await f.getDoc(f.doc(f.db, "accounts", u.uid));
-          let data;
-          if (accountDoc.exists()) {
-            data = accountDoc.data();
-          } else {
-            // Cria conta nova no primeiro acesso
-            data = {
-              ownerId: u.uid,
-              ownerEmail: u.email,
-              plan: "explorador",
-              members: [u.email],
-              createdAt: Date.now(),
-              city: "",
-              state: "",
-              displayName: u.displayName || u.email.split("@")[0],
-            };
-            await f.setDoc(f.doc(f.db, "accounts", u.uid), data);
+          const email = u.email;
+          let data = null;
+          // 1) Fui convidado como membro de OUTRA conta? Então uso a conta compartilhada.
+          try {
+            const snap = await f.getDocs(f.query(f.collection(f.db,"accounts"), f.where("members","array-contains", email)));
+            const guest = snap.docs.find(d => d.data().ownerId && d.data().ownerId !== u.uid);
+            const own   = snap.docs.find(d => d.data().ownerId === u.uid);
+            if (guest) data = guest.data();
+            else if (own) data = own.data();
+          } catch(e) {}
+          // 2) Senão, uso/crio a minha própria conta
+          if (!data) {
+            const ref = f.doc(f.db, "accounts", u.uid);
+            const ex = await f.getDoc(ref);
+            if (ex.exists()) data = ex.data();
+            else {
+              data = {
+                ownerId: u.uid, ownerEmail: email, plan: "explorador",
+                members: [email], createdAt: Date.now(), city: "", state: "",
+                displayName: u.displayName || email.split("@")[0],
+              };
+              await f.setDoc(ref, data);
+            }
           }
-          // Super admin: sempre Pro grátis (não depende de pagamento/webhook)
-          if (isAdminEmail(u.email) && data.plan !== "admin") {
+          // Super admin: sempre Pro grátis (só na conta própria do admin)
+          if (isAdminEmail(email) && data.ownerId === u.uid && data.plan !== "admin") {
             data = { ...data, plan: "admin", planStatus: "active" };
             await f.setDoc(f.doc(f.db, "accounts", u.uid), { plan: "admin", planStatus: "active" }, { merge: true });
           }
@@ -184,11 +191,11 @@ export default function App() {
     // Dados são filtrados por accountId para que membros vejam o mesmo
     const u1 = onSnapshot(
       query(collection(db,"incomes"), where("month","==",month)),
-      s => setIncomes(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>!d.accountId||d.accountId===accountId||d.userId===user.uid))
+      s => setIncomes(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.accountId===accountId))
     );
     const u2 = onSnapshot(
       query(collection(db,"expenses"), where("month","==",month)),
-      s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>!d.accountId||d.accountId===accountId||d.userId===user.uid))
+      s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.accountId===accountId))
     );
     const u3 = onSnapshot(
       query(collection(db,"categories"), where("accountId","==",accountId)),
@@ -738,10 +745,10 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
   const [form,setForm]=useState(null);
   const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?incomes:incomes.filter(i=>i.category===filter);
-  const activeCats=[...new Set(incomes.map(i=>i.category))].map(id=>categories.find(c=>c.id===id)).filter(Boolean);
+  const activeCats=[...new Set(incomes.map(i=>i.category))].map(id=>catOf(categories,id,"💼","#00FF88"));
   const totalAll=incomes.reduce((s,i)=>s+Number(i.amount),0);
   const totalFiltered=filtered.reduce((s,i)=>s+Number(i.amount),0);
-  const filterCat=filter!=="all"?categories.find(c=>c.id===filter):null;
+  const filterCat=filter!=="all"?catOf(categories,filter,"💼","#00FF88"):null;
 
   return(
     <div style={{paddingBottom:80}}>
@@ -810,10 +817,10 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
   const [form,setForm]=useState(null);
   const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?expenses:expenses.filter(e=>e.category===filter);
-  const activeCats=[...new Set(expenses.map(e=>e.category))].map(id=>categories.find(c=>c.id===id)).filter(Boolean);
+  const activeCats=[...new Set(expenses.map(e=>e.category))].map(id=>catOf(categories,id));
   const totalAll=expenses.reduce((s,e)=>s+Number(e.amount),0);
   const totalFiltered=filtered.reduce((s,e)=>s+Number(e.amount),0);
-  const filterCat=filter!=="all"?categories.find(c=>c.id===filter):null;
+  const filterCat=filter!=="all"?catOf(categories,filter):null;
 
   return(
     <div style={{paddingBottom:80}}>
@@ -1126,7 +1133,7 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
       {/* Membros da conta */}
       <div style={{...S.card,marginTop:14}}>
         <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:4}}>👥 Membros da conta</div>
-        <div style={{fontSize:11,color:"#475569",marginBottom:12}}>Adicione e-mails de quem vai usar a mesma conta.</div>
+        <div style={{fontSize:11,color:"#475569",marginBottom:12}}>Adicione o e-mail de quem vai usar a mesma conta (ex: cônjuge).</div>
         {members.map(email=>(
           <div key={email} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1e2035"}}>
             <div>
@@ -1141,6 +1148,9 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
         <div style={{display:"flex",gap:8,marginTop:12}}>
           <input style={{...S.input,flex:1}} value={newMember} onChange={e=>setNewMember(e.target.value)} placeholder="email@exemplo.com"/>
           <button style={{...S.btnPrimary,width:"auto",padding:"0 16px"}} onClick={addMember}>Adicionar</button>
+        </div>
+        <div style={{background:"#12182b",borderRadius:10,padding:"10px 12px",marginTop:12,fontSize:11,color:"#94a3b8",lineHeight:1.5}}>
+          🔑 <b style={{color:"#cbd5e1"}}>Como a pessoa acessa:</b> depois de adicionada aqui, ela abre o app, clica em <b>“Criar conta grátis”</b> usando <b>esse mesmo e-mail</b> e escolhe a <b>senha dela</b>. Pronto — ela cai direto nesta conta compartilhada e vê os mesmos lançamentos. Cada um tem a própria senha; você não precisa saber a senha dela.
         </div>
       </div>
     </div>
