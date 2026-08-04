@@ -26,6 +26,8 @@ const PLANS = {
 // E-mails com acesso Pro vitalício e gratuito (super admin)
 const ADMIN_EMAILS = ["yurisilveirafreire@hotmail.com"];
 const isAdminEmail = (email) => !!email && ADMIN_EMAILS.includes(email.toLowerCase());
+// Valor mensal (R$) de cada plano pago — base do cálculo de comissão de afiliados
+const PLAN_MONTHLY = { pro_mensal: 19.90, pro_anual: 9.90 };
 
 // ============================================================
 // FIREBASE
@@ -107,6 +109,7 @@ export default function App() {
   const [histData, setHistData] = useState([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [refCode, setRefCode]   = useState("");
   const [isDesktop, setIsDesktop] = useState(typeof window!=="undefined" ? window.innerWidth>=1000 : false);
 
   useEffect(()=>{
@@ -115,11 +118,14 @@ export default function App() {
     return ()=>window.removeEventListener("resize",onResize);
   },[]);
 
-  // Detecta ?upgrade=success na URL
+  // Detecta ?upgrade=success e ?ref=CODIGO na URL
   useEffect(()=>{
     const params = new URLSearchParams(window.location.search);
     const up = params.get('upgrade');
-    if(up && up.indexOf('success')===0){ setShowSuccess(true); window.history.replaceState({}, '', '/'); }
+    if(up && up.indexOf('success')===0){ setShowSuccess(true); }
+    const ref = params.get('ref');
+    if(ref){ setRefCode(ref.trim().toUpperCase()); }
+    if(up || ref){ window.history.replaceState({}, '', '/'); }
   },[]);
 
   const showToast = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3200); };
@@ -318,23 +324,33 @@ export default function App() {
   const totalOut = expenses.reduce((s,e)=>s+Number(e.amount),0);
   const balance  = totalIn - totalOut;
   const planInfo = PLANS[accountData?.plan || "explorador"];
+  const isAdmin = !demo && isAdminEmail(user?.email);
   const totalLancamentos = incomes.length + expenses.length;
   const planUsagePct = planInfo.limit === Infinity ? 0 : Math.round((totalLancamentos/planInfo.limit)*100);
 
   if (screen==="login") return (
-    <LoginScreen loading={loading} toast={toast}
-      onLogin={async(email,pass,reg,name,city,state)=>{
+    <LoginScreen loading={loading} toast={toast} initialRef={refCode}
+      onLogin={async(email,pass,reg,name,city,state,ref)=>{
         if(!fb){showToast("Firebase não configurado — use Demo","error");return;}
         setLoading(true);
         try{
           if(reg){
             const cred = await fb.createUserWithEmailAndPassword(fb.auth,email,pass);
             await fb.updateProfile(cred.user, { displayName: name });
-            // Salva localização no perfil
+            // Valida código de indicação (afiliado) se houver
+            let referredBy = null;
+            const code = (ref||"").trim().toUpperCase();
+            if(code){
+              try{
+                const affDoc = await fb.getDoc(fb.doc(fb.db,"affiliates",code));
+                if(affDoc.exists() && affDoc.data().active!==false) referredBy = code;
+              }catch(e){}
+            }
+            // Salva perfil + indicação
             await fb.setDoc(fb.doc(fb.db,"accounts",cred.user.uid),{
               ownerId: cred.user.uid, ownerEmail: email, plan:"explorador",
               members:[email], createdAt:Date.now(), city, state,
-              displayName: name,
+              displayName: name, ...(referredBy?{referredBy}:{}),
             });
           } else {
             await fb.signInWithEmailAndPassword(fb.auth,email,pass);
@@ -358,7 +374,8 @@ export default function App() {
       {tab==="history"    && <History   incomes={incomes}   expenses={expenses} categories={categories} month={month} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} />}
       {tab==="categories" && <Categories categories={categories} expenses={expenses} incomes={incomes} onAdd={addCategory} onEdit={editCategory} />}
       {tab==="comparativo"&& <Comparativo histData={histData} month={month} />}
-      {tab==="account"    && <AccountSettings accountData={accountData} user={user} fb={fb} onUpgrade={()=>setShowUpgrade(true)} onSave={async (data)=>{ await fb.setDoc(fb.doc(fb.db,"accounts",user.uid),{...accountData,...data},{merge:true}); setAccountData(p=>({...p,...data})); showToast("Conta atualizada ✅"); }} />}
+      {tab==="affiliates" && isAdmin && <Affiliates fb={fb} isDesktop={isDesktop} showToast={showToast} />}
+      {tab==="account"    && <AccountSettings accountData={accountData} user={user} fb={fb} isAdmin={isAdmin} onTab={setTab} onUpgrade={()=>setShowUpgrade(true)} onSave={async (data)=>{ await fb.setDoc(fb.doc(fb.db,"accounts",user.uid),{...accountData,...data},{merge:true}); setAccountData(p=>({...p,...data})); showToast("Conta atualizada ✅"); }} />}
     </>
   );
 
@@ -373,7 +390,7 @@ export default function App() {
   if (isDesktop) return (
     <div style={S.rootDesktop}>
       {overlays}
-      <Sidebar tab={tab} onTab={setTab} demo={demo} onLogout={handleLogout} user={user} accountData={accountData} planInfo={planInfo} totalLancamentos={totalLancamentos} onUpgrade={()=>setShowUpgrade(true)} />
+      <Sidebar tab={tab} onTab={setTab} demo={demo} onLogout={handleLogout} user={user} accountData={accountData} planInfo={planInfo} totalLancamentos={totalLancamentos} onUpgrade={()=>setShowUpgrade(true)} isAdmin={isAdmin} />
       <div style={S.dMain}>
         <TopBar month={month} onMonth={setMonth} demo={demo} onLogout={handleLogout} accountData={accountData} planInfo={planInfo} totalLancamentos={totalLancamentos} onUpgrade={()=>setShowUpgrade(true)} />
         <div style={S.dContent}>{content}</div>
@@ -406,16 +423,17 @@ const NAV_ITEMS=[
   {id:"account",    icon:"👤", label:"Perfil"},
 ];
 
-function Sidebar({tab,onTab,demo,onLogout,user,accountData,planInfo,totalLancamentos,onUpgrade}){
+function Sidebar({tab,onTab,demo,onLogout,user,accountData,planInfo,totalLancamentos,onUpgrade,isAdmin}){
   const firstName = accountData?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "você";
   const isExplorador = planInfo?.limit !== Infinity;
+  const items = isAdmin ? [...NAV_ITEMS, {id:"affiliates", icon:"🎯", label:"Afiliados"}] : NAV_ITEMS;
   return(
     <aside style={S.sidebar}>
       <div style={{padding:"22px 20px 14px"}}>
         <div style={{fontWeight:900,fontSize:23,letterSpacing:"-.5px"}}>💸 <span style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGastei</span></div>
       </div>
       <nav style={{flex:1,padding:"6px 12px",display:"flex",flexDirection:"column",gap:4}}>
-        {NAV_ITEMS.map(it=>(
+        {items.map(it=>(
           <button key={it.id} onClick={()=>onTab(it.id)}
             style={{...S.sideItem,...(tab===it.id?S.sideItemOn:{})}}>
             <span style={{fontSize:18,width:24,textAlign:"center"}}>{it.icon}</span>
@@ -473,13 +491,14 @@ function TopBar({month,onMonth,accountData,planInfo}){
 // ============================================================
 const STATES_BR = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
-function LoginScreen({onLogin,onDemo,loading,toast}){
+function LoginScreen({onLogin,onDemo,loading,toast,initialRef}){
   const [email,setEmail]=useState("");
   const [pass,setPass]=useState("");
   const [name,setName]=useState("");
   const [city,setCity]=useState("");
   const [state,setState]=useState("SP");
-  const [reg,setReg]=useState(false);
+  const [ref,setRef]=useState(initialRef||"");
+  const [reg,setReg]=useState(!!initialRef);
 
   return(
     <div style={S.loginRoot}>
@@ -519,7 +538,14 @@ function LoginScreen({onLogin,onDemo,loading,toast}){
           </div>
         )}
 
-        <button style={S.btnPrimary} onClick={()=>onLogin(email,pass,reg,name,city,state)} disabled={loading}>
+        {reg && (
+          <div style={S.fg}>
+            <label style={S.label}>Código de indicação (opcional)</label>
+            <input style={S.input} value={ref} onChange={e=>setRef(e.target.value.toUpperCase())} placeholder="Ex: MARIA10"/>
+          </div>
+        )}
+
+        <button style={S.btnPrimary} onClick={()=>onLogin(email,pass,reg,name,city,state,ref)} disabled={loading}>
           {loading?"Aguarda...":reg?"Criar conta grátis":"Entrar"}
         </button>
 
@@ -1187,7 +1213,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
 // ============================================================
 // ACCOUNT SETTINGS
 // ============================================================
-function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
+function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
   const [name,setName]=useState(accountData?.displayName||"");
   const [city,setCity]=useState(accountData?.city||"");
   const [state,setState]=useState(accountData?.state||"SP");
@@ -1212,6 +1238,13 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
   return(
     <div style={{paddingBottom:80}}>
       <h2 style={{...S.secTitle,marginBottom:14}}>👤 Meu Perfil</h2>
+
+      {isAdmin && onTab && (
+        <button onClick={()=>onTab("affiliates")} style={{...S.card,width:"100%",textAlign:"left",cursor:"pointer",marginBottom:14,border:"1px solid #00FF8844",display:"flex",justifyContent:"space-between",alignItems:"center",background:"linear-gradient(135deg,rgba(0,255,136,.06),rgba(255,214,10,.04))"}}>
+          <span style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>🎯 Programa de Afiliados</span>
+          <span style={{color:"#00FF88",fontWeight:800}}>abrir →</span>
+        </button>
+      )}
 
       {/* Plano */}
       <div style={{...S.card,marginBottom:14,background:"linear-gradient(135deg,#1a1a2e,#16213e)",border:"1px solid #00FF8833"}}>
@@ -1272,6 +1305,124 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade}){
           🔑 <b style={{color:"#cbd5e1"}}>Como a pessoa acessa:</b> depois de adicionada aqui, ela abre o app, clica em <b>“Criar conta grátis”</b> usando <b>esse mesmo e-mail</b> e escolhe a <b>senha dela</b>. Pronto — ela cai direto nesta conta compartilhada e vê os mesmos lançamentos. Cada um tem a própria senha; você não precisa saber a senha dela.
         </div>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// AFILIADOS (admin)
+// ============================================================
+function Affiliates({ fb, isDesktop, showToast }){
+  const [affs,setAffs]=useState([]);
+  const [accounts,setAccounts]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [err,setErr]=useState(false);
+  const [name,setName]=useState("");
+  const [insta,setInsta]=useState("");
+  const [code,setCode]=useState("");
+  const [pct,setPct]=useState(20);
+  const [saving,setSaving]=useState(false);
+
+  const load=async()=>{
+    if(!fb) return;
+    setLoading(true); setErr(false);
+    try{
+      const [aSnap,accSnap]=await Promise.all([
+        fb.getDocs(fb.collection(fb.db,"affiliates")),
+        fb.getDocs(fb.collection(fb.db,"accounts")),
+      ]);
+      setAffs(aSnap.docs.map(d=>({id:d.id,...d.data()})));
+      setAccounts(accSnap.docs.map(d=>({id:d.id,...d.data()})));
+    }catch(e){ setErr(true); }
+    setLoading(false);
+  };
+  useEffect(()=>{ load(); },[fb]);
+
+  const suggestedCode=(name||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);
+  const create=async()=>{
+    const finalCode=((code||suggestedCode)||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(!name.trim()){ showToast("Coloque o nome do influenciador","error"); return; }
+    if(!finalCode){ showToast("Defina um código","error"); return; }
+    if(!(Number(pct)>0&&Number(pct)<=100)){ showToast("Comissão entre 1 e 100%","error"); return; }
+    setSaving(true);
+    try{
+      const exists=await fb.getDoc(fb.doc(fb.db,"affiliates",finalCode));
+      if(exists.exists()){ showToast("Esse código já existe","error"); setSaving(false); return; }
+      await fb.setDoc(fb.doc(fb.db,"affiliates",finalCode),{
+        code:finalCode, name:name.trim(), instagram:insta.trim(), commissionPct:Number(pct),
+        active:true, createdAt:Date.now(),
+      });
+      showToast("Afiliado criado ✅");
+      setName(""); setInsta(""); setCode(""); setPct(20);
+      load();
+    }catch(e){ showToast("Erro ao criar (permissão do Firestore?)","error"); }
+    setSaving(false);
+  };
+
+  const statsFor=(aff)=>{
+    const ref=accounts.filter(a=>(a.referredBy||"").toUpperCase()===aff.code);
+    const paying=ref.filter(a=>PLAN_MONTHLY[a.plan] && a.planStatus!=="cancelled");
+    const monthly=paying.reduce((s,a)=>s+PLAN_MONTHLY[a.plan]*(aff.commissionPct/100),0);
+    return { ref:ref.length, paying:paying.length, monthly };
+  };
+  const totalOwed=affs.reduce((s,a)=>s+statsFor(a).monthly,0);
+  const totalPaying=affs.reduce((s,a)=>s+statsFor(a).paying,0);
+
+  return (
+    <div style={{paddingBottom:80}}>
+      <h2 style={{...S.secTitle,marginBottom:6}}>🎯 Programa de Afiliados</h2>
+      <p style={{fontSize:13,color:"#6b7280",marginBottom:16}}>Crie um código pra cada influenciador. Quem se cadastrar com o código conta como indicação dele. Você paga a comissão manualmente todo mês, com base nos indicados que estão pagando.</p>
+
+      <div style={{display:"grid",gridTemplateColumns:isDesktop?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16}}>
+        <div style={S.card}><div style={{fontSize:11,color:"#6b7280"}}>Afiliados</div><div style={{fontWeight:900,fontSize:22,color:"#00FF88"}}>{affs.length}</div></div>
+        <div style={S.card}><div style={{fontSize:11,color:"#6b7280"}}>Indicados pagando</div><div style={{fontWeight:900,fontSize:22,color:"#FFD60A"}}>{totalPaying}</div></div>
+        <div style={S.card}><div style={{fontSize:11,color:"#6b7280"}}>A pagar/mês</div><div style={{fontWeight:900,fontSize:22,color:"#FF3D7F"}}>{fmt(totalOwed)}</div></div>
+      </div>
+
+      <div style={{...S.card,marginBottom:16}}>
+        <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0",marginBottom:12}}>➕ Novo afiliado</div>
+        <div style={{display:"grid",gridTemplateColumns:isDesktop?"1fr 1fr":"1fr",gap:10}}>
+          <div style={S.fg}><label style={S.label}>Nome do influenciador</label>
+            <input style={S.input} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex: Maria Souza"/></div>
+          <div style={S.fg}><label style={S.label}>@ do Instagram (opcional)</label>
+            <input style={S.input} value={insta} onChange={e=>setInsta(e.target.value)} placeholder="@maria"/></div>
+          <div style={S.fg}><label style={S.label}>Código do cupom</label>
+            <input style={S.input} value={code} onChange={e=>setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""))} placeholder={suggestedCode||"Ex: MARIA10"}/></div>
+          <div style={S.fg}><label style={S.label}>Comissão (%)</label>
+            <input style={S.input} type="number" value={pct} onChange={e=>setPct(e.target.value)} placeholder="20"/></div>
+        </div>
+        <button style={{...S.btnPrimary,marginTop:6}} onClick={create} disabled={saving}>{saving?"Criando...":"Criar afiliado"}</button>
+      </div>
+
+      {loading && <p style={S.empty}>Carregando...</p>}
+      {err && <p style={S.empty}>Não consegui carregar os dados (pode ser permissão do Firestore).</p>}
+      {!loading && !err && affs.length===0 && <p style={S.empty}>Nenhum afiliado ainda. Crie o primeiro acima 👆</p>}
+      {!loading && affs.map(aff=>{
+        const st=statsFor(aff);
+        const link=`https://app.meuigastei.com.br?ref=${aff.code}`;
+        return (
+          <div key={aff.id} style={{...S.card,marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
+              <div>
+                <div style={{fontWeight:800,fontSize:15,color:"#e2e8f0"}}>{aff.name} {aff.instagram&&<span style={{color:"#6b7280",fontWeight:500,fontSize:12}}>{aff.instagram}</span>}</div>
+                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Código: <b style={{color:"#00FF88"}}>{aff.code}</b> · Comissão: <b>{aff.commissionPct}%</b></div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontWeight:900,fontSize:18,color:"#FF3D7F"}}>{fmt(st.monthly)}</div>
+                <div style={{fontSize:11,color:"#475569"}}>a pagar/mês</div>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:16,marginTop:10,fontSize:12,color:"#94a3b8"}}>
+              <span>👥 {st.ref} indicados</span>
+              <span>💳 {st.paying} pagando</span>
+            </div>
+            <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
+              <input readOnly value={link} style={{...S.input,flex:1,fontSize:12,color:"#94a3b8"}}/>
+              <button style={{...S.btnSm,padding:"8px 12px",whiteSpace:"nowrap"}} onClick={()=>{ try{navigator.clipboard.writeText(link); showToast("Link copiado ✅");}catch(e){} }}>copiar link</button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
