@@ -9,8 +9,8 @@ const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 const PRICES = {
-  pro_mensal: "price_1U08FV2E3bmPfwJJeuiPD9Yu",
-  pro_anual:  "price_1U08I12E3bmPfwJJrUwgkY8H",
+  pro_mensal: "price_1U0W6mCQQCrPw3DqvKZ33c06",
+  pro_anual:  "price_1U0W6kCQQCrPw3Dq90B1J66O",
 };
 
 exports.createCheckoutSession = onCall({ secrets: [stripeSecretKey] }, async (request) => {
