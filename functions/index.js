@@ -92,3 +92,8 @@ exports.validateCoupon = onCall(async (request) => {
   }
   return { type: "discount", discount: coupon.discount, plan: coupon.plan };
 });
+
+// --- Open Finance (Pluggy) — módulo separado ---
+const pluggy = require("./pluggy");
+exports.pluggyConnectToken = pluggy.pluggyConnectToken;
+exports.pluggySync = pluggy.pluggySync;

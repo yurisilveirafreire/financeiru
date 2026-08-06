@@ -1230,6 +1230,77 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
 // ============================================================
 // ACCOUNT SETTINGS
 // ============================================================
+// ---- Open Finance (Pluggy) ----
+const PLUGGY_WIDGET_URL = "https://cdn.pluggy.ai/pluggy-connect/v2.8.2/pluggy-connect.js";
+const OPEN_FINANCE_SANDBOX = true; // TODO go-live: trocar para false (esconde os bancos de teste)
+
+function loadPluggyWidget(){
+  return new Promise((resolve,reject)=>{
+    if(window.PluggyConnect) return resolve(window.PluggyConnect);
+    const s=document.createElement("script");
+    s.src=PLUGGY_WIDGET_URL; s.async=true;
+    s.onload=()=>resolve(window.PluggyConnect);
+    s.onerror=()=>reject(new Error("Não consegui carregar o Open Finance agora."));
+    document.body.appendChild(s);
+  });
+}
+
+function OpenFinanceCard({accountData,user,fb,onUpgrade}){
+  const [busy,setBusy]=useState(false);
+  const [status,setStatus]=useState(null); // {msg,type}
+  const isPago = !!accountData?.plan && accountData.plan!=="explorador";
+
+  const conectar=async()=>{
+    if(!isPago){ onUpgrade&&onUpgrade(); return; }
+    if(!fb||!user){ setStatus({msg:"App ainda carregando — tenta de novo em 1s.",type:"error"}); return; }
+    setBusy(true); setStatus({msg:"Abrindo conexão segura…",type:"info"});
+    try{
+      const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
+      const functions = getFunctions(fb.auth.app, "us-central1");
+      const getToken = httpsCallable(functions, "pluggyConnectToken");
+      const resp = await getToken({});
+      const accessToken = resp.data.accessToken;
+
+      const PluggyConnect = await loadPluggyWidget();
+      const widget = new PluggyConnect({
+        connectToken: accessToken,
+        includeSandbox: OPEN_FINANCE_SANDBOX,
+        onSuccess: async (itemData)=>{
+          setStatus({msg:"Banco conectado! Importando seus lançamentos…",type:"info"});
+          try{
+            const sync = httpsCallable(functions, "pluggySync");
+            const r = await sync({ itemId: itemData?.item?.id });
+            setStatus({msg:`Prontinho! ${r.data?.importadas||0} lançamentos importados 🎉`,type:"success"});
+          }catch(e){ setStatus({msg:"Conectou, mas falhou ao importar: "+e.message,type:"error"}); }
+          setBusy(false);
+        },
+        onError: (err)=>{ setStatus({msg:"Erro ao conectar: "+(err?.message||"tenta de novo"),type:"error"}); setBusy(false); },
+        onClose: ()=>{ setBusy(false); },
+      });
+      widget.init();
+    }catch(e){
+      if(String(e?.message||"").includes("OPEN_FINANCE_REQUER_PRO")){ onUpgrade&&onUpgrade(); }
+      else setStatus({msg:e?.message||"Não deu pra abrir agora.",type:"error"});
+      setBusy(false);
+    }
+  };
+
+  return(
+    <div style={{...S.card,marginBottom:14,border:"1px solid #00FF8833"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+        <div>
+          <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>🏦 Conectar meu banco</div>
+          <div style={{fontSize:11,color:"#475569",marginTop:2,lineHeight:1.4}}>Open Finance: importa seus gastos automaticamente.{isPago?"":" Exclusivo dos planos Pro."}</div>
+        </div>
+        <button disabled={busy} onClick={conectar} style={{background:isPago?"linear-gradient(135deg,#00FF88,#00c46a)":"#1e2035",color:isPago?"#04120a":"#94a3b8",border:isPago?"none":"1px solid #2a2d4a",borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,cursor:busy?"default":"pointer",whiteSpace:"nowrap"}}>
+          {busy?"Conectando…":isPago?"Conectar 🔗":"Virar Pro ⚡"}
+        </button>
+      </div>
+      {status && <div style={{marginTop:10,fontSize:12,color:status.type==="error"?"#FF3D7F":status.type==="success"?"#00FF88":"#94a3b8"}}>{status.msg}</div>}
+    </div>
+  );
+}
+
 function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
   const [name,setName]=useState(accountData?.displayName||"");
   const [city,setCity]=useState(accountData?.city||"");
@@ -1278,6 +1349,9 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
           )}
         </div>
       </div>
+
+      {/* Open Finance (Pluggy) */}
+      <OpenFinanceCard accountData={accountData} user={user} fb={fb} onUpgrade={onUpgrade} />
 
       {/* Dados pessoais */}
       <div style={S.card}>
