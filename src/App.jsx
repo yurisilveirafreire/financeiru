@@ -358,6 +358,17 @@ export default function App() {
         } catch(e){ showToast(e.message,"error"); }
         setLoading(false);
       }}
+      onForgot={async(email)=>{
+        if(!fb){showToast("Firebase não configurado — use Demo","error");return;}
+        const mail=(email||"").trim();
+        if(!mail || mail.indexOf("@")<0){showToast("Digite seu e-mail no campo acima primeiro 🙂","error");return;}
+        setLoading(true);
+        try{
+          await fb.sendPasswordResetEmail(fb.auth, mail);
+          showToast("Enviamos um link pra redefinir sua senha 📩 Confere seu e-mail (e o spam).","success");
+        } catch(e){ showToast(e.message,"error"); }
+        setLoading(false);
+      }}
       onDemo={()=>{
         setDemo(true);
         setUser({uid:"u1",email:"demo@igastei.com",displayName:"Demo"});
@@ -491,7 +502,7 @@ function TopBar({month,onMonth,accountData,planInfo}){
 // ============================================================
 const STATES_BR = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
-function LoginScreen({onLogin,onDemo,loading,toast,initialRef}){
+function LoginScreen({onLogin,onForgot,onDemo,loading,toast,initialRef}){
   const [email,setEmail]=useState("");
   const [pass,setPass]=useState("");
   const [name,setName]=useState("");
@@ -552,6 +563,12 @@ function LoginScreen({onLogin,onDemo,loading,toast,initialRef}){
         <button style={S.btnLink} onClick={()=>setReg(!reg)}>
           {reg?"Já tenho conta →":"Não tenho conta. Criar grátis →"}
         </button>
+
+        {!reg && onForgot && (
+          <button style={{...S.btnLink,color:"#6b7280",fontSize:13,marginTop:2}} onClick={()=>onForgot(email)} disabled={loading}>
+            Esqueci minha senha
+          </button>
+        )}
 
         {reg && (
           <div style={{background:"#1a1a2e",borderRadius:10,padding:12,marginTop:8}}>
