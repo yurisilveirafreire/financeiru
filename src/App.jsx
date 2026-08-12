@@ -320,9 +320,12 @@ export default function App() {
     await fb.signOut(fb.auth);
   };
 
-  const totalIn  = incomes.reduce((s,i)=>s+Number(i.amount),0);
-  const totalOut = expenses.reduce((s,e)=>s+Number(e.amount),0);
+  const totalIn  = incomes.filter(i=>i.status!=="previsto").reduce((s,i)=>s+Number(i.amount),0);
+  const totalOut = expenses.filter(e=>e.status!=="previsto").reduce((s,e)=>s+Number(e.amount),0);
   const balance  = totalIn - totalOut;
+  const previstoIn  = incomes.filter(i=>i.status==="previsto").reduce((s,i)=>s+Number(i.amount),0);
+  const previstoOut = expenses.filter(e=>e.status==="previsto").reduce((s,e)=>s+Number(e.amount),0);
+  const saldoPrevisto = balance + previstoIn - previstoOut;
   const planInfo = PLANS[accountData?.plan || "explorador"];
   const isAdmin = !demo && isAdminEmail(user?.email);
   const totalLancamentos = incomes.length + expenses.length;
@@ -379,7 +382,7 @@ export default function App() {
 
   const content = (
     <>
-      {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} month={month} onGoal={saveGoal} histData={histData} onTab={setTab} planInfo={planInfo} totalLancamentos={totalLancamentos} onUpgrade={()=>setShowUpgrade(true)} isDesktop={isDesktop} />}
+      {tab==="dashboard"  && <Dashboard incomes={incomes} expenses={expenses} categories={categories} totalIn={totalIn} totalOut={totalOut} balance={balance} previstoIn={previstoIn} previstoOut={previstoOut} saldoPrevisto={saldoPrevisto} goal={goal} month={month} onGoal={saveGoal} histData={histData} onTab={setTab} planInfo={planInfo} totalLancamentos={totalLancamentos} onUpgrade={()=>setShowUpgrade(true)} isDesktop={isDesktop} />}
       {tab==="incomes"    && <Incomes   incomes={incomes}   categories={categories} onAdd={d=>addItem("incomes",d)}  onEdit={(id,d)=>editItem("incomes",id,d)}  onDelete={id=>deleteItem("incomes",id)}  onAddCat={addCategory} />}
       {tab==="expenses"   && <Expenses  expenses={expenses} categories={categories} onAdd={d=>addItem("expenses",d)} onEdit={(id,d)=>editItem("expenses",id,d)} onDelete={id=>deleteItem("expenses",id)} onAddCat={addCategory} />}
       {tab==="history"    && <History   incomes={incomes}   expenses={expenses} categories={categories} month={month} totalIn={totalIn} totalOut={totalOut} balance={balance} goal={goal} />}
@@ -654,7 +657,7 @@ function BottomNav({tab,onTab}){
 // ============================================================
 // DASHBOARD
 // ============================================================
-function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,month,onGoal,histData,onTab,planInfo,totalLancamentos,onUpgrade,isDesktop}){
+function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previstoIn,previstoOut,saldoPrevisto,goal,month,onGoal,histData,onTab,planInfo,totalLancamentos,onUpgrade,isDesktop}){
   const [editGoal,setEditGoal]=useState(false);
   const [gInput,setGInput]=useState(goal);
   const saved=balance;
@@ -703,6 +706,22 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
       <div style={{fontSize:isDesktop?11:12,color:"#6b7280",fontWeight:600}}>{isDesktop?"💵 Saldo atual":"saldo atual"}</div>
       <div style={{fontWeight:900,fontSize:isDesktop?bigNum:32,color:balance>=0?"#00FF88":"#FF3D7F",letterSpacing:"-1px",marginTop:4}}>{fmt(balance)}</div>
       <div style={{fontSize:isDesktop?10:11,color:balance>=0?"#00FF8888":"#FF3D7F88",marginTop:4}}>{balance>=0?"✅ tudo certo!":"⚠️ gastos > entradas"}</div>
+    </div>
+  );
+
+  const temPrevisto = previstoIn>0 || previstoOut>0;
+  const previstoCard = temPrevisto && (
+    <div style={{...S.card,border:"1px solid #FFD60A44",background:"linear-gradient(135deg,#1a1a2e,#1c1a10)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <span style={{fontWeight:800,fontSize:13,color:"#FFD60A"}}>📅 Previsto do mês</span>
+        <span style={{fontSize:10,color:"#475569"}}>a pagar e a receber</span>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"flex-end"}}>
+        <div><div style={{fontSize:10,color:"#6b7280",fontWeight:600}}>a receber</div><div style={{fontWeight:800,fontSize:16,color:"#00FF88",marginTop:2}}>+{fmt(previstoIn)}</div></div>
+        <div><div style={{fontSize:10,color:"#6b7280",fontWeight:600}}>a pagar</div><div style={{fontWeight:800,fontSize:16,color:"#FF3D7F",marginTop:2}}>-{fmt(previstoOut)}</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#6b7280",fontWeight:600}}>saldo previsto</div><div style={{fontWeight:900,fontSize:18,color:saldoPrevisto>=0?"#FFD60A":"#FF3D7F",marginTop:2}}>{fmt(saldoPrevisto)}</div></div>
+      </div>
+      <div style={{fontSize:10,color:"#475569",marginTop:8,lineHeight:1.4}}>💡 Saldo atual ({fmt(balance)}) + o que ainda entra − o que ainda sai.</div>
     </div>
   );
 
@@ -797,6 +816,7 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
     <div style={{display:"flex",flexDirection:"column",gap:18}}>
       {banner}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}}>{statEntradas}{statGastos}{statSaldo}</div>
+      {previstoCard}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,alignItems:"start"}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>{metaCard}{porPessoaCard}</div>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>{categoriaCard}{comparativoCard}</div>
@@ -809,6 +829,7 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,goal,mo
       {banner}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>{statEntradas}{statGastos}</div>
       {statSaldo}
+      {previstoCard}
       {metaCard}
       {porPessoaCard}
       {categoriaCard}
@@ -835,6 +856,8 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
   const [ncLabel,setNcLabel]=useState("");
   const [ncIcon,setNcIcon]=useState(isIncome?"💡":"📌");
   const [ncColor,setNcColor]=useState(isIncome?"#00FF88":"#6366f1");
+  const [status,setStatus]=useState(item?.status==="previsto"?"previsto":"pago");
+  const [recorrente,setRecorrente]=useState(!!item?.recorrente);
 
   const saveNewCat=()=>{
     if(!ncLabel)return;
@@ -859,9 +882,23 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
           <div style={{...S.fg,flex:1}}><label style={S.label}>Valor (R$)</label>
             <input style={S.input} type="number" value={amt} onChange={e=>setAmt(e.target.value)} placeholder="0,00"/>
           </div>
-          <div style={{...S.fg,flex:1}}><label style={S.label}>Data</label>
+          <div style={{...S.fg,flex:1}}><label style={S.label}>{status==="previsto"?"Vence em":"Data"}</label>
             <input style={S.input} value={date} onChange={e=>setDate(e.target.value)} placeholder="DD/MM/AAAA"/>
           </div>
+        </div>
+
+        <div style={S.fg}>
+          <label style={S.label}>Situação</label>
+          <div style={{display:"flex",gap:8}}>
+            <button type="button" onClick={()=>setStatus("pago")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="pago"?(isIncome?"#00FF88":"#FF3D7F"):"#1e2035"}`,background:status==="pago"?(isIncome?"rgba(0,255,136,.13)":"rgba(255,61,127,.13)"):"#0D0D1A",color:"#e2e8f0"}}>{isIncome?"✅ Já recebi":"✅ Já paguei"}</button>
+            <button type="button" onClick={()=>setStatus("previsto")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="previsto"?"#FFD60A":"#1e2035"}`,background:status==="previsto"?"rgba(255,214,10,.13)":"#0D0D1A",color:"#e2e8f0"}}>📅 {isIncome?"A receber":"A pagar"}</button>
+          </div>
+          {status==="previsto" && (
+            <label style={{display:"flex",alignItems:"center",gap:8,marginTop:10,fontSize:13,color:"#cbd5e1",cursor:"pointer"}}>
+              <input type="checkbox" checked={recorrente} onChange={e=>setRecorrente(e.target.checked)} style={{width:18,height:18,accentColor:"#FFD60A"}}/>
+              🔁 Repete todo mês (conta fixa)
+            </label>
+          )}
         </div>
 
         <div style={S.fg}>
@@ -892,7 +929,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
         </div>
 
         <button style={{...S.btnPrimary,background:isIncome?"linear-gradient(135deg,#00FF88,#06b6d4)":"linear-gradient(135deg,#FF3D7F,#f97316)",color:isIncome?"#0D0D1A":"#fff",marginTop:8}}
-          onClick={()=>{ if(!desc||!amt)return; onSave({description:desc,amount:Number(amt),category:cat,date}); }}>
+          onClick={()=>{ if(!desc||!amt)return; onSave({description:desc,amount:Number(amt),category:cat,date,status,recorrente}); }}>
           {item?"Atualizar":"Salvar"} {isIncome?"entrada":"gasto"}
         </button>
       </div>
@@ -951,17 +988,19 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
       )}
 
       {filtered.length===0 && <p style={S.empty}>Nenhuma entrada {filter!=="all"?"nesta categoria":"este mês"}</p>}
-      {[...filtered].sort((a,b)=>b.createdAt-a.createdAt).map(inc=>{
+      {[...filtered].sort((a,b)=>(a.status==="previsto"?-1:0)-(b.status==="previsto"?-1:0)||b.createdAt-a.createdAt).map(inc=>{
         const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#00FF88",label:prettyCat(inc.category)};
+        const previsto=inc.status==="previsto";
         return(
-          <div key={inc.id} style={S.listItem}>
+          <div key={inc.id} style={{...S.listItem,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
             <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0"}}>{inc.description}</div>
-              <div style={{fontSize:11,color:"#475569"}}>{inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0"}}>{inc.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#FFD60A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a receber{inc.recorrente?" 🔁":""}</span>}</div>
+              <div style={{fontSize:11,color:"#475569"}}>{previsto?`vence ${inc.date}`:inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
-            <div style={{fontWeight:800,fontSize:15,color:"#00FF88"}}>+{fmt(inc.amount)}</div>
+            <div style={{fontWeight:800,fontSize:15,color:"#00FF88",opacity:previsto?0.6:1}}>+{fmt(inc.amount)}</div>
             <div style={{display:"flex",gap:2}}>
+              {previsto&&<button style={{...S.btnIcon,color:"#00FF88"}} title="Marcar como recebido" onClick={()=>onEdit(inc.id,{status:"pago"})}>✅</button>}
               <button style={S.btnIcon} onClick={()=>setForm(inc)}>✏️</button>
               <button style={S.btnIcon} onClick={()=>onDelete(inc.id)}>🗑</button>
             </div>
@@ -1023,17 +1062,19 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
       )}
 
       {filtered.length===0 && <p style={S.empty}>Nenhum gasto {filter!=="all"?"nesta categoria":"este mês"}</p>}
-      {[...filtered].sort((a,b)=>b.createdAt-a.createdAt).map(exp=>{
+      {[...filtered].sort((a,b)=>(a.status==="previsto"?-1:0)-(b.status==="previsto"?-1:0)||b.createdAt-a.createdAt).map(exp=>{
         const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#94a3b8",label:prettyCat(exp.category)};
+        const previsto=exp.status==="previsto";
         return(
-          <div key={exp.id} style={S.listItem}>
+          <div key={exp.id} style={{...S.listItem,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
             <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0"}}>{exp.description}</div>
-              <div style={{fontSize:11,color:"#475569"}}>{exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0"}}>{exp.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#FFD60A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a pagar{exp.recorrente?" 🔁":""}</span>}</div>
+              <div style={{fontSize:11,color:"#475569"}}>{previsto?`vence ${exp.date}`:exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
-            <div style={{fontWeight:800,fontSize:15,color:"#FF3D7F"}}>-{fmt(exp.amount)}</div>
+            <div style={{fontWeight:800,fontSize:15,color:"#FF3D7F",opacity:previsto?0.6:1}}>-{fmt(exp.amount)}</div>
             <div style={{display:"flex",gap:2}}>
+              {previsto&&<button style={{...S.btnIcon,color:"#00FF88"}} title="Marcar como pago" onClick={()=>onEdit(exp.id,{status:"pago"})}>✅</button>}
               <button style={S.btnIcon} onClick={()=>setForm(exp)}>✏️</button>
               <button style={S.btnIcon} onClick={()=>onDelete(exp.id)}>🗑</button>
             </div>
@@ -1233,6 +1274,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
 // ---- Open Finance (Pluggy) ----
 const PLUGGY_WIDGET_URL = "https://cdn.pluggy.ai/pluggy-connect/v2.8.2/pluggy-connect.js";
 const OPEN_FINANCE_SANDBOX = true; // TODO go-live: trocar para false (esconde os bancos de teste)
+const OPEN_FINANCE_ATIVO = false;  // liga (true) quando as credenciais da Pluggy estiverem validadas
 
 function loadPluggyWidget(){
   return new Promise((resolve,reject)=>{
@@ -1290,10 +1332,10 @@ function OpenFinanceCard({accountData,user,fb,onUpgrade}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
         <div>
           <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>🏦 Conectar meu banco</div>
-          <div style={{fontSize:11,color:"#475569",marginTop:2,lineHeight:1.4}}>Open Finance: importa seus gastos automaticamente.{isPago?"":" Exclusivo dos planos Pro."}</div>
+          <div style={{fontSize:11,color:"#475569",marginTop:2,lineHeight:1.4}}>Open Finance: importa seus gastos automaticamente.{!OPEN_FINANCE_ATIVO?" Chega já já 🔜":(isPago?"":" Exclusivo dos planos Pro.")}</div>
         </div>
-        <button disabled={busy} onClick={conectar} style={{background:isPago?"linear-gradient(135deg,#00FF88,#00c46a)":"#1e2035",color:isPago?"#04120a":"#94a3b8",border:isPago?"none":"1px solid #2a2d4a",borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,cursor:busy?"default":"pointer",whiteSpace:"nowrap"}}>
-          {busy?"Conectando…":isPago?"Conectar 🔗":"Virar Pro ⚡"}
+        <button disabled={busy||!OPEN_FINANCE_ATIVO} onClick={conectar} style={{background:!OPEN_FINANCE_ATIVO?"#1e2035":(isPago?"linear-gradient(135deg,#00FF88,#00c46a)":"#1e2035"),color:!OPEN_FINANCE_ATIVO?"#6b7280":(isPago?"#04120a":"#94a3b8"),border:!OPEN_FINANCE_ATIVO?"1px solid #2a2d4a":(isPago?"none":"1px solid #2a2d4a"),borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,cursor:(busy||!OPEN_FINANCE_ATIVO)?"default":"pointer",whiteSpace:"nowrap"}}>
+          {!OPEN_FINANCE_ATIVO?"Em breve 🔜":busy?"Conectando…":isPago?"Conectar 🔗":"Virar Pro ⚡"}
         </button>
       </div>
       {status && <div style={{marginTop:10,fontSize:12,color:status.type==="error"?"#FF3D7F":status.type==="success"?"#00FF88":"#94a3b8"}}>{status.msg}</div>}
