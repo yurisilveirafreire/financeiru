@@ -66,6 +66,10 @@ const DEFAULT_CATEGORIES = [
 const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const fmt = (v) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v||0);
 const todayStr = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
+// Máscara de dinheiro: recebe só os dígitos (centavos) e mostra "1.000,00"
+const maskMoney = (digits) => (Number(String(digits).replace(/\D/g,"")||0)/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+// Máscara de data: 20042026 -> 20/04/2026 (progressivo)
+const maskDate = (raw) => { const d=String(raw).replace(/\D/g,"").slice(0,8); let o=d.slice(0,2); if(d.length>2)o+="/"+d.slice(2,4); if(d.length>4)o+="/"+d.slice(4,8); return o; };
 const monthKey = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
 // Nome legível de categoria: remove sufixo técnico "_1783870137705" e deixa bonito
 const prettyCat = (cid) => String(cid||"").replace(/[_-]?\d{9,}$/,"").replace(/[_-]+/g," ").trim().replace(/^\w/, c=>c.toUpperCase()) || "Outros";
@@ -850,7 +854,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
   const isIncome=type==="income";
   const validCats=categories.filter(c=>c.type===type||c.type==="both");
   const [desc,setDesc]=useState(item?.description||"");
-  const [amt,setAmt]=useState(item?.amount||"");
+  const [amt,setAmt]=useState(item?.amount?String(Math.round(Number(item.amount)*100)):""); // guarda os dígitos (centavos)
   const [cat,setCat]=useState(item?.category||(validCats[0]?.id||"outros"));
   const [date,setDate]=useState(item?.date||todayStr());
   const [newCat,setNewCat]=useState(false);
@@ -881,10 +885,10 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
 
         <div style={{display:"flex",gap:10}}>
           <div style={{...S.fg,flex:1}}><label style={S.label}>Valor (R$)</label>
-            <input style={S.input} type="number" value={amt} onChange={e=>setAmt(e.target.value)} placeholder="0,00"/>
+            <input style={S.input} type="text" inputMode="numeric" value={amt?maskMoney(amt):""} onChange={e=>setAmt(e.target.value.replace(/\D/g,""))} placeholder="0,00"/>
           </div>
           <div style={{...S.fg,flex:1}}><label style={S.label}>{status==="previsto"?"Vence em":"Data"}</label>
-            <input style={S.input} value={date} onChange={e=>setDate(e.target.value)} placeholder="DD/MM/AAAA"/>
+            <input style={S.input} inputMode="numeric" value={date} onChange={e=>setDate(maskDate(e.target.value))} placeholder="DD/MM/AAAA"/>
           </div>
         </div>
 
@@ -930,7 +934,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
         </div>
 
         <button style={{...S.btnPrimary,background:isIncome?"linear-gradient(135deg,#00FF88,#06b6d4)":"linear-gradient(135deg,#FF3D7F,#f97316)",color:isIncome?"#0D0D1A":"#fff",marginTop:8}}
-          onClick={()=>{ if(!desc||!amt)return; onSave({description:desc,amount:Number(amt),category:cat,date,status,recorrente}); }}>
+          onClick={()=>{ if(!desc||!amt)return; onSave({description:desc,amount:Number(amt)/100,category:cat,date,status,recorrente}); }}>
           {item?"Atualizar":"Salvar"} {isIncome?"entrada":"gasto"}
         </button>
       </div>
