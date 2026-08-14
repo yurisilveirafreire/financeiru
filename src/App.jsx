@@ -110,10 +110,11 @@ export default function App() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [refCode, setRefCode]   = useState("");
-  const [isDesktop, setIsDesktop] = useState(typeof window!=="undefined" ? window.innerWidth>=1000 : false);
+  const isBigMouse = () => typeof window!=="undefined" && window.innerWidth>=1000 && !(window.matchMedia && window.matchMedia("(pointer:coarse)").matches);
+  const [isDesktop, setIsDesktop] = useState(isBigMouse());
 
   useEffect(()=>{
-    const onResize=()=>setIsDesktop(window.innerWidth>=1000);
+    const onResize=()=>setIsDesktop(isBigMouse());
     window.addEventListener("resize",onResize);
     return ()=>window.removeEventListener("resize",onResize);
   },[]);
