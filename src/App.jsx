@@ -269,7 +269,26 @@ export default function App() {
     const newAmount = Number(data.amount);
     if (!newAmount || newAmount <= 0) { showToast("⚠️ Valor inválido.","error"); return; }
     const accountId = demo ? "demo" : (accountData?.ownerId || user.uid);
-    const item = { ...data, accountId, userId: user?.uid||"demo", userName: user?.displayName||user?.email||"Demo", month, createdAt: Date.now() };
+    const base = { ...data, accountId, userId: user?.uid||"demo", userName: user?.displayName||user?.email||"Demo", createdAt: Date.now() };
+
+    // 🔁 Conta fixa (recorrente + previsto): cria o lançamento no mês atual + próximos 11 meses
+    if (!demo && data.recorrente && data.status==="previsto") {
+      const recId = `rec_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      const dd = (String(data.date||"").split("/")[0]) || "01";
+      const [y,m] = month.split("-").map(Number);
+      const batch = fb.writeBatch(fb.db);
+      for (let k=0;k<12;k++){
+        const d = new Date(y, m-1+k, 1);
+        const mk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+        const dateStr = `${dd}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+        batch.set(fb.doc(fb.db, col, `${recId}_${mk}`), { ...base, month: mk, date: dateStr, recId });
+      }
+      await batch.commit();
+      showToast("🔁 Conta fixa criada nos próximos 12 meses ✅");
+      return;
+    }
+
+    const item = { ...base, month };
     if (demo) {
       const ni = { ...item, id: Date.now().toString() };
       if (col==="incomes") { demoIncomes.push(ni); setIncomes(p=>[...p,ni]); }
