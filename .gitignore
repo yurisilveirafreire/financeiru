@@ -67,3 +67,6 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Lixo interno do git (locks/tmp) - nao commitar
+_git_lixo/
