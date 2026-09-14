@@ -204,7 +204,7 @@ export default function App() {
 
     // Usa o accountId (ownerId da conta compartilhada)
     const accountId = accountData.ownerId || user.uid;
-    const { collection, query, where, onSnapshot, doc, getDoc, db } = fb;
+    const { collection, query, where, onSnapshot, doc, getDoc, getDocs, setDoc, db } = fb;
 
     // Dados são filtrados por accountId para que membros vejam o mesmo
     const u1 = onSnapshot(
@@ -215,6 +215,31 @@ export default function App() {
       query(collection(db,"expenses"), where("month","==",month)),
       s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.accountId===accountId))
     );
+
+    // 🔁 Preenche as contas fixas (recorrentes) neste mês se ainda não existirem.
+    // Funciona pra qualquer recorrente (inclusive as criadas antes dessa versão).
+    const fillRecorrentes = async (col) => {
+      try {
+        const snap = await getDocs(query(collection(db,col), where("accountId","==",accountId), where("recorrente","==",true)));
+        const all = snap.docs.map(d=>({id:d.id,...d.data()}));
+        const groups = {};
+        for (const s of all){ const k = s.recId || s.id; if(!groups[k] || (s.month||"") < groups[k].month) groups[k] = { ...s, month: s.month||month }; }
+        for (const k of Object.keys(groups)){
+          const seed = groups[k];
+          if (!seed.month || seed.month > month) continue;                 // ainda não começou
+          if (all.some(s => (s.recId||s.id)===k && s.month===month)) continue; // já tem neste mês
+          const recId = seed.recId || k;
+          const dd = (String(seed.date||"").split("/")[0]) || "01";
+          const [yy,mm] = month.split("-");
+          await setDoc(doc(db,col,`${recId}_${month}`), {
+            accountId, userId: seed.userId||user.uid, userName: seed.userName||"",
+            description: seed.description||"", amount: Number(seed.amount)||0, category: seed.category||"outros",
+            status: "previsto", recorrente: true, recId, month, date: `${dd}/${mm}/${yy}`, createdAt: Date.now(),
+          });
+        }
+      } catch(e){}
+    };
+    fillRecorrentes("incomes"); fillRecorrentes("expenses");
     const u3 = onSnapshot(
       query(collection(db,"categories"), where("accountId","==",accountId)),
       s => {
@@ -271,20 +296,12 @@ export default function App() {
     const accountId = demo ? "demo" : (accountData?.ownerId || user.uid);
     const base = { ...data, accountId, userId: user?.uid||"demo", userName: user?.displayName||user?.email||"Demo", createdAt: Date.now() };
 
-    // 🔁 Conta fixa (recorrente + previsto): cria o lançamento no mês atual + próximos 11 meses
+    // 🔁 Conta fixa (recorrente + previsto): cria com um recId; os outros meses
+    // são preenchidos sozinhos quando o usuário abre cada mês (ver fillRecorrentes).
     if (!demo && data.recorrente && data.status==="previsto") {
       const recId = `rec_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-      const dd = (String(data.date||"").split("/")[0]) || "01";
-      const [y,m] = month.split("-").map(Number);
-      const batch = fb.writeBatch(fb.db);
-      for (let k=0;k<12;k++){
-        const d = new Date(y, m-1+k, 1);
-        const mk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-        const dateStr = `${dd}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
-        batch.set(fb.doc(fb.db, col, `${recId}_${mk}`), { ...base, month: mk, date: dateStr, recId });
-      }
-      await batch.commit();
-      showToast("🔁 Conta fixa criada nos próximos 12 meses ✅");
+      await fb.setDoc(fb.doc(fb.db, col, `${recId}_${month}`), { ...base, month, recId });
+      showToast("🔁 Conta fixa criada (repete todo mês) ✅");
       return;
     }
 
