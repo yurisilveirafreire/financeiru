@@ -1315,7 +1315,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
 // ---- Open Finance (Pluggy) ----
 const PLUGGY_WIDGET_URL = "https://cdn.pluggy.ai/pluggy-connect/v2.8.2/pluggy-connect.js";
 const OPEN_FINANCE_SANDBOX = true; // TODO go-live: trocar para false (esconde os bancos de teste)
-const OPEN_FINANCE_ATIVO = false;  // liga (true) quando as credenciais da Pluggy estiverem validadas
+const OPEN_FINANCE_ATIVO = true;  // liga (true) quando as credenciais da Pluggy estiverem validadas
 
 function loadPluggyWidget(){
   return new Promise((resolve,reject)=>{
