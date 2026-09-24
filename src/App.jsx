@@ -96,6 +96,96 @@ let demoGoals = { "2026-07": 2000 };
 // ============================================================
 // APP ROOT
 // ============================================================
+// ============================================================
+// INSTALL PROMPT (PWA) — ensina a instalar na tela inicial
+// ============================================================
+function InstallPrompt(){
+  const [show,setShow]     = useState(false);
+  const [mode,setMode]     = useState("");   // ios-safari | ios-other | android
+  const [expand,setExpand] = useState(false);
+  const bip = useState(function(){ return { e:null }; })[0];
+
+  useEffect(function(){
+    try{
+      const nav = window.navigator;
+      const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || nav.standalone === true;
+      if(standalone) return;
+      const d = Number(localStorage.getItem("igastei_install_dismiss")||0);
+      if(d && (Date.now()-d) < 7*24*60*60*1000) return;
+      const ua = nav.userAgent || "";
+      const isIOS = /iphone|ipad|ipod/i.test(ua);
+      if(isIOS){
+        const isSafari = !/crios|fxios|edgios|opios/i.test(ua);
+        setMode(isSafari ? "ios-safari" : "ios-other");
+        setShow(true);
+      }
+    }catch(e){}
+  },[]);
+
+  useEffect(function(){
+    function onBIP(e){ e.preventDefault(); bip.e=e; setMode("android"); setShow(true); }
+    window.addEventListener("beforeinstallprompt", onBIP);
+    return function(){ window.removeEventListener("beforeinstallprompt", onBIP); };
+  },[]);
+
+  function dismiss(){ try{ localStorage.setItem("igastei_install_dismiss", String(Date.now())); }catch(e){} setShow(false); }
+  async function installAndroid(){ const e=bip.e; if(!e) return; e.prompt(); try{ await e.userChoice; }catch(_){} bip.e=null; dismiss(); }
+
+  if(!show) return null;
+
+  const wrap    = { position:"fixed", left:12, right:12, bottom:14, zIndex:9999, display:"flex", justifyContent:"center", pointerEvents:"none" };
+  const card    = { pointerEvents:"auto", width:"100%", maxWidth:440, background:"#14172E", border:"1px solid #2a2d4a", borderRadius:18, padding:"14px 16px", boxShadow:"0 12px 40px rgba(0,0,0,.45)", color:"#fff", fontFamily:"Nunito, sans-serif" };
+  const row     = { display:"flex", alignItems:"center", gap:12 };
+  const iconBox = { width:44, height:44, borderRadius:12, background:"linear-gradient(135deg,#0D0D1A,#1A1D37)", border:"1px solid #2a2d4a", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontWeight:900, color:"#00FF88", fontSize:19 };
+  const btn     = { background:"linear-gradient(135deg,#00FF88,#00c46a)", color:"#04120a", border:"none", borderRadius:10, padding:"9px 14px", fontWeight:800, fontSize:14, cursor:"pointer", whiteSpace:"nowrap" };
+  const xbtn    = { background:"transparent", color:"#6b7280", border:"none", fontSize:22, cursor:"pointer", lineHeight:1, padding:"0 4px" };
+  const ShareIcon = function(){ return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{verticalAlign:"-3px"}}>
+      <path d="M12 3v12" stroke="#00FF88" strokeWidth="2.2" strokeLinecap="round"/>
+      <path d="M8 7l4-4 4 4" stroke="#00FF88" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" stroke="#00FF88" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  ); };
+
+  return (
+    <div style={wrap}>
+      <div style={card}>
+        <div style={row}>
+          <div style={iconBox}>iG</div>
+          <div style={{flex:1, minWidth:0}}>
+            <div style={{fontWeight:900, fontSize:15}}>{"\U0001F4F2"} Instale o iGastei</div>
+            <div style={{fontSize:12.5, color:"#aab", marginTop:1}}>
+              {mode==="android"    && "Acesso rápido na sua tela inicial."}
+              {mode==="ios-safari" && "Adicione à tela inicial pra abrir como app."}
+              {mode==="ios-other"  && "Abra no Safari pra instalar como app."}
+            </div>
+          </div>
+          {mode==="android"
+            ? <button style={btn} onClick={installAndroid}>Instalar ⚡</button>
+            : mode==="ios-safari"
+              ? <button style={btn} onClick={function(){ setExpand(function(v){ return !v; }); }}>Como?</button>
+              : null}
+          <button style={xbtn} onClick={dismiss} aria-label="Fechar">×</button>
+        </div>
+
+        {mode==="ios-safari" && expand && (
+          <div style={{marginTop:12, paddingTop:12, borderTop:"1px solid #2a2d4a", fontSize:13.5, lineHeight:1.8, color:"#dfe3ee"}}>
+            <div>1. Toque em <ShareIcon/> <b>Compartilhar</b> (na barra de baixo).</div>
+            <div>2. Role e toque em <b>{"“"}Adicionar {"à"} Tela de In{"í"}cio{"”"}</b>.</div>
+            <div>3. Toque em <b>Adicionar</b>. Pronto! 💚</div>
+          </div>
+        )}
+
+        {mode==="ios-other" && (
+          <div style={{marginTop:10, fontSize:12.5, color:"#dfe3ee"}}>
+            Copie o link e abra no <b>Safari</b> {"—"} depois {"é"} s{"ó"} {"“"}Adicionar {"à"} Tela de In{"í"}cio{"”"}.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [screen, setScreen]     = useState("login");
   const [user, setUser]         = useState(null);
@@ -373,6 +463,8 @@ export default function App() {
   const planUsagePct = planInfo.limit === Infinity ? 0 : Math.round((totalLancamentos/planInfo.limit)*100);
 
   if (screen==="login") return (
+    <>
+    <InstallPrompt />
     <LoginScreen loading={loading} toast={toast} initialRef={refCode}
       onLogin={async(email,pass,reg,name,city,state,ref)=>{
         if(!fb){showToast("Firebase não configurado — use Demo","error");return;}
@@ -419,6 +511,7 @@ export default function App() {
         setScreen("app");
       }}
     />
+    </>
   );
 
   const content = (
@@ -436,6 +529,7 @@ export default function App() {
 
   const overlays = (
     <>
+      <InstallPrompt />
       {toast && <div style={{...S.toast, background: toast.type==="error"?"#FF3D7F":toast.type==="info"?"#6366f1":"#00FF88", color: toast.type==="success"?"#0D0D1A":"#fff"}}>{toast.msg}</div>}
       {showUpgrade && <UpgradeScreen user={user} accountData={accountData} fb={fb} onClose={()=>setShowUpgrade(false)}/>}
       {showSuccess && <UpgradeSuccess onClose={()=>setShowSuccess(false)}/>}
