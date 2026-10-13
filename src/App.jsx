@@ -732,28 +732,21 @@ function Header({month,onMonth,demo,onLogout,user,accountData,planInfo,totalLanc
   const prev=()=>{ const d=new Date(y,m-2,1); onMonth(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`); };
   const next=()=>{ const d=new Date(y,m,1);   onMonth(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`); };
   const firstName = accountData?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "você";
-  const isExplorador = accountData?.plan === "explorador";
-
+  const planName = demo ? "Modo demonstração" : (planInfo?.name || (accountData?.plan==="explorador"?"Explorador":"Pro"));
   return(
     <header style={S.header}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:12,minWidth:0}}>
         <div style={S.avatar}>{firstName[0]?.toUpperCase()}</div>
-        <div>
-          <div style={{fontSize:11,color:"#6b7280"}}>olá,</div>
-          <div style={{fontWeight:800,fontSize:15,color:"#e2e8f0"}}>{firstName} 👋</div>
+        <div style={{minWidth:0}}>
+          <div style={{fontWeight:900,fontSize:16,color:"#F5F7FA",letterSpacing:"-.02em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Olá, {firstName}</div>
+          <div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>{planName}</div>
         </div>
-        {demo && <div style={{fontSize:10,background:"#FFD60A",color:"#0D0D1A",borderRadius:4,padding:"2px 8px",fontWeight:800}}>DEMO</div>}
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
-        {isExplorador && (
-          <div style={{fontSize:10,background:"#1a1a2e",borderRadius:6,padding:"3px 8px",color:"#00FF88",fontWeight:700}}>
-            {totalLancamentos}/10 lançamentos
-          </div>
-        )}
         <div style={S.monthSel}>
-          <button style={S.monthBtn} onClick={prev}>‹</button>
-          <span style={{fontSize:12,fontWeight:700,minWidth:68,textAlign:"center",color:"#e2e8f0"}}>{MONTHS[m-1]} {y}</span>
-          <button style={S.monthBtn} onClick={next}>›</button>
+          <button style={S.monthBtn} onClick={prev} aria-label="mês anterior">‹</button>
+          <span style={{fontSize:13.5,fontWeight:800,minWidth:58,textAlign:"center",color:"#F5F7FA"}}>{MONTHS[m-1]} {String(y).slice(2)}</span>
+          <button style={S.monthBtn} onClick={next} aria-label="próximo mês">›</button>
         </div>
         <button style={S.btnLogout} onClick={onLogout}>Sair</button>
       </div>
@@ -798,7 +791,9 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   const saved=balance;
   const goalPct=goal>0?Math.min(100,Math.round((saved/goal)*100)):0;
   const isExplorador = planInfo?.limit !== Infinity;
-  const bigNum = isDesktop?24:20;
+  const [,mm]=month.split("-").map(Number);
+  const mName=(MONTHS[mm-1]||"").toLowerCase();
+  const num={fontVariantNumeric:"tabular-nums"};
 
   const byCatExp={};
   expenses.forEach(e=>{ byCatExp[e.category]=(byCatExp[e.category]||0)+Number(e.amount); });
@@ -807,113 +802,121 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   incomes.forEach(i=>{ const k=i.userName||"—"; if(!byPerson[k]) byPerson[k]={in:0,out:0}; byPerson[k].in+=Number(i.amount); });
   expenses.forEach(e=>{ const k=e.userName||"—"; if(!byPerson[k]) byPerson[k]={in:0,out:0}; byPerson[k].out+=Number(e.amount); });
 
+  const Card = {background:"#14172E",borderRadius:18,padding:18};
+  const CTitle = {fontWeight:900,fontSize:16,color:"#F5F7FA"};
+  const CSub = {color:"#8b94ad",fontWeight:800,fontSize:12.5};
+
   const banner = isExplorador && (
-    <div style={{background:"linear-gradient(135deg,#1a1a2e,#16213e)",border:"1px solid #00FF8833",borderRadius:12,padding:14}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{fontSize:12,color:"#00FF88",fontWeight:800}}>🎮 Modo Explorador</div>
-          <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{totalLancamentos}/10 lançamentos este mês</div>
+    <div style={Card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+        <div style={{minWidth:0}}>
+          <div style={{fontSize:14,color:"#00FF88",fontWeight:900}}>Modo Explorador</div>
+          <div style={{fontSize:12.5,color:"#8b94ad",marginTop:2,fontWeight:700}}>{totalLancamentos}/10 lançamentos este mês</div>
         </div>
-        <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:8,padding:"6px 12px",fontWeight:800,fontSize:12,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>Fazer upgrade ⚡</button>
+        <button onClick={onUpgrade} style={{background:"#00FF88",color:"#04120a",border:"none",borderRadius:12,padding:"12px 16px",fontWeight:900,fontSize:13.5,cursor:"pointer",minHeight:44,whiteSpace:"nowrap"}}>Virar Pro ⚡</button>
       </div>
-      <div style={{marginTop:8,height:4,background:"#0D0D1A",borderRadius:2,overflow:"hidden"}}>
-        <div style={{height:"100%",width:`${(totalLancamentos/10)*100}%`,background:"linear-gradient(90deg,#00FF88,#FFD60A)",borderRadius:2,transition:"width .5s"}}/>
+      <div style={{marginTop:12,height:8,background:"#0f1626",borderRadius:5,overflow:"hidden"}}>
+        <div style={{height:"100%",width:`${Math.min(100,(totalLancamentos/10)*100)}%`,background:"#00FF88",borderRadius:5,transition:"width .5s"}}/>
       </div>
     </div>
   );
 
+  const heroSaldo = (
+    <div style={{background:"#14172E",borderRadius:22,padding:isDesktop?24:22}}>
+      <div style={CSub}>Saldo atual · {mName}</div>
+      <div style={{fontWeight:900,fontSize:isDesktop?44:46,color:balance>=0?"#00FF88":"#FF3D7F",letterSpacing:"-.03em",lineHeight:1,marginTop:8,...num}}>{fmt(balance)}</div>
+      <div style={{display:"inline-block",marginTop:14,background:balance>=0?"#00FF8818":"#FF3D7F18",color:balance>=0?"#00FF88":"#FF3D7F",fontWeight:800,fontSize:12.5,padding:"6px 12px",borderRadius:10}}>{balance>=0?"✓ tudo certo, sobra no mês":"⚠️ os gastos passaram das entradas"}</div>
+    </div>
+  );
+
   const statEntradas = (
-    <div style={{...S.card,borderTop:"2px solid #00FF88"}}>
-      <div style={{fontSize:11,color:"#6b7280",fontWeight:600}}>💰 Entradas</div>
-      <div style={{fontWeight:900,fontSize:bigNum,color:"#00FF88",marginTop:4}}>{fmt(totalIn)}</div>
-      <div style={{fontSize:10,color:"#475569"}}>{incomes.length} lançamentos</div>
+    <div style={Card}>
+      <div style={CSub}>Entradas</div>
+      <div style={{fontWeight:900,fontSize:23,color:"#00FF88",marginTop:6,letterSpacing:"-.02em",...num}}>{fmt(totalIn)}</div>
+      <div style={{fontSize:11.5,color:"#5b647d",fontWeight:700,marginTop:2}}>{incomes.length} lançamentos</div>
     </div>
   );
   const statGastos = (
-    <div style={{...S.card,borderTop:"2px solid #FF3D7F"}}>
-      <div style={{fontSize:11,color:"#6b7280",fontWeight:600}}>💸 Gastos</div>
-      <div style={{fontWeight:900,fontSize:bigNum,color:"#FF3D7F",marginTop:4}}>{fmt(totalOut)}</div>
-      <div style={{fontSize:10,color:"#475569"}}>{expenses.length} lançamentos</div>
-    </div>
-  );
-  const statSaldo = (
-    <div style={{...S.card,background:"linear-gradient(135deg,#1a1a2e,#16213e)",border:`1px solid ${balance>=0?"#00FF8833":"#FF3D7F33"}`,textAlign:isDesktop?"left":"center",padding:isDesktop?16:20,borderTop:isDesktop?"2px solid #FFD60A":undefined}}>
-      <div style={{fontSize:isDesktop?11:12,color:"#6b7280",fontWeight:600}}>{isDesktop?"💵 Saldo atual":"saldo atual"}</div>
-      <div style={{fontWeight:900,fontSize:isDesktop?bigNum:32,color:balance>=0?"#00FF88":"#FF3D7F",letterSpacing:"-1px",marginTop:4}}>{fmt(balance)}</div>
-      <div style={{fontSize:isDesktop?10:11,color:balance>=0?"#00FF8888":"#FF3D7F88",marginTop:4}}>{balance>=0?"✅ tudo certo!":"⚠️ gastos > entradas"}</div>
+    <div style={Card}>
+      <div style={CSub}>Gastos</div>
+      <div style={{fontWeight:900,fontSize:23,color:"#FF3D7F",marginTop:6,letterSpacing:"-.02em",...num}}>{fmt(totalOut)}</div>
+      <div style={{fontSize:11.5,color:"#5b647d",fontWeight:700,marginTop:2}}>{expenses.length} lançamentos</div>
     </div>
   );
 
   const temPrevisto = previstoIn>0 || previstoOut>0;
   const previstoCard = temPrevisto && (
-    <div style={{...S.card,border:"1px solid #FFD60A44",background:"linear-gradient(135deg,#1a1a2e,#1c1a10)"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-        <span style={{fontWeight:800,fontSize:13,color:"#FFD60A"}}>📅 Previsto do mês</span>
-        <span style={{fontSize:10,color:"#475569"}}>a pagar e a receber</span>
+    <div style={Card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <span style={{...CTitle,color:"#FFD60A"}}>Previsto do mês</span>
+        <span style={CSub}>a pagar e a receber</span>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"flex-end"}}>
-        <div><div style={{fontSize:10,color:"#6b7280",fontWeight:600}}>a receber</div><div style={{fontWeight:800,fontSize:16,color:"#00FF88",marginTop:2}}>+{fmt(previstoIn)}</div></div>
-        <div><div style={{fontSize:10,color:"#6b7280",fontWeight:600}}>a pagar</div><div style={{fontWeight:800,fontSize:16,color:"#FF3D7F",marginTop:2}}>-{fmt(previstoOut)}</div></div>
-        <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#6b7280",fontWeight:600}}>saldo previsto</div><div style={{fontWeight:900,fontSize:18,color:saldoPrevisto>=0?"#FFD60A":"#FF3D7F",marginTop:2}}>{fmt(saldoPrevisto)}</div></div>
+      <div style={{display:"flex",justifyContent:"space-between",gap:10}}>
+        <div><div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>a receber</div><div style={{fontWeight:900,fontSize:18,color:"#00FF88",marginTop:3,...num}}>+{fmt(previstoIn)}</div></div>
+        <div><div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>a pagar</div><div style={{fontWeight:900,fontSize:18,color:"#FF3D7F",marginTop:3,...num}}>-{fmt(previstoOut)}</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>saldo previsto</div><div style={{fontWeight:900,fontSize:20,color:saldoPrevisto>=0?"#FFD60A":"#FF3D7F",marginTop:3,...num}}>{fmt(saldoPrevisto)}</div></div>
       </div>
-      <div style={{fontSize:10,color:"#475569",marginTop:8,lineHeight:1.4}}>💡 Saldo atual ({fmt(balance)}) + o que ainda entra − o que ainda sai.</div>
+      <div style={{fontSize:12,color:"#5b647d",marginTop:12,lineHeight:1.4,fontWeight:600}}>Saldo atual ({fmt(balance)}) + o que ainda entra − o que ainda sai.</div>
     </div>
   );
 
   const metaCard = (
-    <div style={S.card}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-        <span style={{fontWeight:700,fontSize:13,color:"#e2e8f0"}}>🎯 Meta de economia</span>
-        <button style={S.btnSm} onClick={()=>{setEditGoal(!editGoal);setGInput(goal);}}>{editGoal?"cancelar":"editar"}</button>
+    <div style={Card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:editGoal?12:8}}>
+        <span style={CTitle}>Meta de economia</span>
+        {!editGoal && <button style={S.btnSm} onClick={()=>{setEditGoal(true);setGInput(goal);}}>editar</button>}
       </div>
       {editGoal?(
         <div style={{display:"flex",gap:8}}>
           <input style={{...S.input,flex:1}} type="number" value={gInput} onChange={e=>setGInput(Number(e.target.value))} placeholder="Ex: 2000"/>
-          <button style={{...S.btnPrimary,width:"auto",padding:"0 16px"}} onClick={()=>{onGoal(gInput);setEditGoal(false);}}>salvar</button>
+          <button style={{...S.btnPrimary,width:"auto",padding:"0 18px"}} onClick={()=>{onGoal(gInput);setEditGoal(false);}}>salvar</button>
+          <button style={{...S.btnGhost,width:"auto",padding:"0 14px"}} onClick={()=>setEditGoal(false)}>x</button>
         </div>
       ):(
         <>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:6}}>
-            <span style={{color:"#00FF88",fontWeight:700}}>{fmt(saved)} economizados</span>
-            <span style={{color:"#475569"}}>meta: {fmt(goal)}</span>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:14,fontWeight:800,marginBottom:8}}>
+            <span style={{color:"#c7cde0",...num}}>{fmt(saved)} <span style={{color:"#8b94ad",fontWeight:700}}>de {fmt(goal)}</span></span>
+            <span style={{color:goalPct>=100?"#00FF88":"#FFD60A"}}>{goalPct}%</span>
           </div>
           <ProgressBar pct={goalPct} color={goalPct>=100?"#00FF88":"#FFD60A"}/>
-          <div style={{textAlign:"right",fontSize:11,color:"#475569",marginTop:3}}>{goalPct}%</div>
         </>
       )}
     </div>
   );
 
   const porPessoaCard = Object.keys(byPerson).length>0 && (
-    <div style={S.card}>
-      <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:12}}>👥 Por pessoa</div>
+    <div style={Card}>
+      <div style={{...CTitle,marginBottom:14}}>Por pessoa</div>
       {Object.entries(byPerson).map(([name,v])=>(
-        <div key={name} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-          <div style={{width:32,height:32,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,color:"#fff",fontSize:14}}>{name[0]?.toUpperCase()}</div>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:600,fontSize:13,color:"#e2e8f0"}}>{name}</div>
-            <div style={{display:"flex",gap:10,fontSize:11,marginTop:2}}>
+        <div key={name} style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+          <div style={{width:40,height:40,background:"#1f2440",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#F5F7FA",fontSize:16,flexShrink:0}}>{name[0]?.toUpperCase()}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:800,fontSize:14.5,color:"#F5F7FA"}}>{name}</div>
+            <div style={{display:"flex",gap:12,fontSize:12.5,marginTop:2,fontWeight:700,...num}}>
               <span style={{color:"#00FF88"}}>+{fmt(v.in)}</span>
               <span style={{color:"#FF3D7F"}}>-{fmt(v.out)}</span>
-              <span style={{color:v.in-v.out>=0?"#FFD60A":"#FF3D7F",fontWeight:700}}>=&nbsp;{fmt(v.in-v.out)}</span>
             </div>
           </div>
+          <div style={{fontWeight:900,fontSize:15,color:v.in-v.out>=0?"#FFD60A":"#FF3D7F",...num}}>{fmt(v.in-v.out)}</div>
         </div>
       ))}
     </div>
   );
 
   const categoriaCard = Object.keys(byCatExp).length>0 && (
-    <div style={S.card}>
-      <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:12}}>🏷️ Gastos por categoria</div>
+    <div style={Card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <span style={CTitle}>Gastos por categoria</span>
+        <span style={CSub}>{mName}</span>
+      </div>
       {Object.entries(byCatExp).sort((a,b)=>b[1]-a[1]).slice(0,isDesktop?8:5).map(([cid,val])=>{
         const cat=categories.find(c=>c.id===cid)||{label:prettyCat(cid),icon:"📦",color:"#94a3b8"};
         const pct=totalOut>0?(val/totalOut)*100:0;
         return(
-          <div key={cid} style={{marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-              <span style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{cat.icon} {cat.label}</span>
-              <span style={{fontWeight:700,fontSize:12,color:cat.color}}>{fmt(val)}</span>
+          <div key={cid} style={{marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+              <span style={{fontSize:14.5,fontWeight:800,color:"#F5F7FA"}}>{cat.icon} {cat.label}</span>
+              <span style={{fontWeight:900,fontSize:14.5,color:cat.color,...num}}>{fmt(val)}</span>
             </div>
             <ProgressBar pct={pct} color={cat.color}/>
           </div>
@@ -923,23 +926,23 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   );
 
   const comparativoCard = histData&&histData.length>0 && (
-    <div style={S.card}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-        <span style={{fontWeight:700,fontSize:13,color:"#e2e8f0"}}>📈 Comparativo</span>
+    <div style={Card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <span style={CTitle}>Comparativo</span>
         <button style={S.btnSm} onClick={()=>onTab("comparativo")}>ver tudo →</button>
       </div>
-      <div style={{display:"flex",gap:isDesktop?8:4,alignItems:"flex-end",height:isDesktop?110:60}}>
+      <div style={{display:"flex",gap:isDesktop?10:7,alignItems:"flex-end"}}>
         {histData.map((d)=>{
           const [,m2]=d.month.split("-").map(Number);
           const maxVal=Math.max(...histData.map(x=>Math.max(x.totalIn,x.totalOut)),1);
           const hOut=Math.round((d.totalOut/maxVal)*100);
           const isCurrent=d.month===month;
           return(
-            <div key={d.month} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-              <div style={{width:"100%",height:isDesktop?96:50,display:"flex",alignItems:"flex-end"}}>
-                <div style={{width:"100%",height:`${hOut}%`,background:isCurrent?"linear-gradient(180deg,#FF3D7F,#ff6b9d)":"#1e2035",borderRadius:"3px 3px 0 0",minHeight:3}}/>
+            <div key={d.month} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+              <div style={{width:"100%",height:isDesktop?100:64,display:"flex",alignItems:"flex-end"}}>
+                <div style={{width:"100%",height:`${hOut}%`,background:isCurrent?"#FF3D7F":"#232845",borderRadius:"7px 7px 2px 2px",minHeight:4}}/>
               </div>
-              <span style={{fontSize:9,color:isCurrent?"#00FF88":"#475569",fontWeight:isCurrent?800:400}}>{MONTHS[m2-1]}</span>
+              <span style={{fontSize:11,color:isCurrent?"#00FF88":"#5b647d",fontWeight:isCurrent?900:700}}>{MONTHS[m2-1]}</span>
             </div>
           );
         })}
@@ -950,7 +953,8 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   if (isDesktop) return (
     <div style={{display:"flex",flexDirection:"column",gap:18}}>
       {banner}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}}>{statEntradas}{statGastos}{statSaldo}</div>
+      {heroSaldo}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>{statEntradas}{statGastos}</div>
       {previstoCard}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,alignItems:"start"}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>{metaCard}{porPessoaCard}</div>
@@ -962,19 +966,19 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   return(
     <div style={{display:"flex",flexDirection:"column",gap:14,paddingBottom:16}}>
       {banner}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>{statEntradas}{statGastos}</div>
-      {statSaldo}
+      {heroSaldo}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>{statEntradas}{statGastos}</div>
       {previstoCard}
       {metaCard}
-      {porPessoaCard}
       {categoriaCard}
+      {porPessoaCard}
       {comparativoCard}
     </div>
   );
 }
 
 function ProgressBar({pct,color}){
-  return <div style={{height:6,background:"#1e2035",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3,transition:"width .5s"}}/></div>;
+  return <div style={{height:12,background:"#0f1626",borderRadius:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:color,borderRadius:7,transition:"width .5s"}}/></div>;
 }
 
 // ============================================================
@@ -1860,37 +1864,37 @@ function UpgradeSuccess({ onClose }) {
 // STYLES
 // ============================================================
 const S={
-  root:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:90},
+  root:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Nunito',system-ui,sans-serif",paddingBottom:90},
   // --- DESKTOP ---
-  rootDesktop:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Inter',system-ui,sans-serif",display:"flex"},
+  rootDesktop:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Nunito',system-ui,sans-serif",display:"flex"},
   sidebar:{width:250,flexShrink:0,background:"#0a0d17",borderRight:"1px solid #1e2035",display:"flex",flexDirection:"column",position:"sticky",top:0,height:"100vh"},
   sideItem:{display:"flex",alignItems:"center",gap:12,width:"100%",background:"none",border:"none",color:"#8b94ad",padding:"11px 14px",borderRadius:10,cursor:"pointer",fontSize:14.5,fontWeight:600,textAlign:"left",fontFamily:"inherit",transition:"background .15s,color .15s"},
-  sideItemOn:{background:"linear-gradient(135deg,rgba(0,255,136,.14),rgba(255,214,10,.08))",color:"#00FF88",fontWeight:800},
+  sideItemOn:{background:"#00FF8814",color:"#00FF88",fontWeight:800},
   dMain:{flex:1,minWidth:0,display:"flex",flexDirection:"column"},
   topbar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 34px",borderBottom:"1px solid #1e2035",position:"sticky",top:0,background:"rgba(13,13,26,.85)",backdropFilter:"blur(10px)",zIndex:10},
   dContent:{padding:"26px 34px 60px",maxWidth:1160,width:"100%",margin:"0 auto"},
   header:{background:"#0D0D1A",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #1e2035",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(10px)"},
-  avatar:{width:36,height:36,background:"linear-gradient(135deg,#00FF88,#FFD60A)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#0D0D1A"},
-  monthSel:{display:"flex",alignItems:"center",gap:4},
-  monthBtn:{background:"#1e2035",border:"none",color:"#e2e8f0",borderRadius:6,width:26,height:26,cursor:"pointer",fontSize:14},
-  btnLogout:{background:"transparent",border:"1px solid #1e2035",color:"#475569",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:11},
+  avatar:{width:44,height:44,background:"#00FF88",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#04120a",flexShrink:0},
+  monthSel:{display:"flex",alignItems:"center",gap:2,background:"#14172E",borderRadius:12,padding:"3px 4px"},
+  monthBtn:{background:"transparent",border:"none",color:"#c7cde0",borderRadius:9,width:34,height:34,cursor:"pointer",fontSize:18,fontWeight:900},
+  btnLogout:{background:"transparent",border:"1px solid #2a2f52",color:"#8b94ad",borderRadius:10,padding:"9px 12px",cursor:"pointer",fontSize:12.5,fontWeight:800},
   toast:{position:"fixed",top:14,left:"50%",transform:"translateX(-50%)",padding:"10px 20px",borderRadius:10,fontWeight:700,zIndex:999,fontSize:13,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,.5)"},
   loginRoot:{minHeight:"100vh",background:"#0D0D1A",display:"flex",alignItems:"center",justifyContent:"center",padding:16},
   loginCard:{background:"#111827",borderRadius:20,padding:28,width:"100%",maxWidth:380,border:"1px solid #1e2035",boxShadow:"0 20px 60px rgba(0,0,0,.5)"},
   main:{padding:"14px 16px",maxWidth:500,margin:"0 auto"},
-  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#111827",borderTop:"1px solid #1e2035",display:"flex",alignItems:"center",zIndex:10,height:64,padding:"0 8px"},
+  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#0f1322",borderTop:"1px solid #1a1f38",display:"flex",alignItems:"center",zIndex:10,height:68,padding:"0 8px"},
   bottomNavBtn:{flex:1,background:"none",border:"none",color:"#475569",padding:"8px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1},
   bottomNavBtnOn:{color:"#00FF88"},
-  bottomNavCenter:{width:52,height:52,background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:"0 4px 20px #00FF8844",flexShrink:0,margin:"0 8px"},
+  bottomNavCenter:{width:56,height:56,background:"#00FF88",border:"none",borderRadius:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#04120a",flexShrink:0,margin:"0 8px"},
   fg:{marginBottom:12},
   label:{display:"block",fontSize:11,color:"#6b7280",marginBottom:4,fontWeight:700,letterSpacing:"0.5px",textTransform:"uppercase"},
   input:{width:"100%",background:"#0D0D1A",border:"1px solid #1e2035",borderRadius:10,padding:"11px 13px",color:"#e2e8f0",fontSize:14,boxSizing:"border-box",outline:"none"},
-  btnPrimary:{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",color:"#0D0D1A",borderRadius:12,padding:"13px 20px",cursor:"pointer",fontWeight:900,fontSize:14,width:"100%"},
+  btnPrimary:{background:"#00FF88",border:"none",color:"#04120a",borderRadius:12,padding:"14px 20px",cursor:"pointer",fontWeight:900,fontSize:15,width:"100%",minHeight:48},
   btnGhost:{width:"100%",background:"#1e2035",border:"none",color:"#94a3b8",borderRadius:12,padding:13,cursor:"pointer",fontWeight:600,fontSize:14},
   btnLink:{background:"none",border:"none",color:"#00FF88",cursor:"pointer",fontSize:14,width:"100%",marginTop:8,padding:8,textAlign:"center"},
-  btnSm:{background:"#1e2035",border:"none",color:"#94a3b8",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontWeight:600,fontSize:11},
+  btnSm:{background:"#1f2440",border:"none",color:"#c7cde0",borderRadius:10,padding:"8px 13px",cursor:"pointer",fontWeight:800,fontSize:12.5},
   btnIcon:{background:"none",border:"none",cursor:"pointer",fontSize:15,padding:4,opacity:.6},
-  card:{background:"#111827",borderRadius:14,padding:14,border:"1px solid #1e2035"},
+  card:{background:"#14172E",borderRadius:18,padding:18},
   secHeader:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14},
   secTitle:{fontWeight:900,fontSize:20,color:"#e2e8f0",margin:0,letterSpacing:"-0.5px"},
   listItem:{background:"#111827",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10,border:"1px solid #1e2035"},
