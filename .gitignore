@@ -70,3 +70,11 @@ node_modules/
 
 # Lixo interno do git (locks/tmp) - nao commitar
 _git_lixo/
+
+# Capacitor iOS (nativo)
+ios/App/Pods/
+ios/App/App/public/
+ios/App/build/
+ios/DerivedData/
+*.xcuserstate
+.DS_Store

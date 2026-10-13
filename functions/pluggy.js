@@ -72,9 +72,15 @@ exports.pluggyConnectToken = onCall(
       throw new HttpsError("permission-denied", "OPEN_FINANCE_REQUER_PRO");
     }
 
-    const pluggy = getPluggy();
-    const connectToken = await pluggy.createConnectToken({ clientUserId: uid });
-    return { accessToken: connectToken.accessToken };
+    try {
+      const pluggy = getPluggy();
+      const connectToken = await pluggy.createConnectToken({ clientUserId: uid });
+      return { accessToken: connectToken.accessToken };
+    } catch (e) {
+      const msg = (e && (e.message || e.code || e.name)) ? String(e.message || e.code || e.name) : "erro desconhecido";
+      console.error("PLUGGY_CONNECT_TOKEN_FALHOU:", msg, e && e.stack ? e.stack : "");
+      throw new HttpsError("internal", "PLUGGY_DEBUG: " + msg);
+    }
   }
 );
 
