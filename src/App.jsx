@@ -49,18 +49,18 @@ async function getFirebase() {
 // CATEGORIAS PADRÃO
 // ============================================================
 const DEFAULT_CATEGORIES = [
-  { id: "moradia",     label: "Moradia",         icon: "🏠", color: "#6366f1", type: "expense" },
-  { id: "alimentacao", label: "Alimentação",      icon: "🛒", color: "#f59e0b", type: "expense" },
+  { id: "moradia",     label: "Moradia",         icon: "🏠", color: "#3B7BFF", type: "expense" },
+  { id: "alimentacao", label: "Alimentação",      icon: "🛒", color: "#E8930A", type: "expense" },
   { id: "transporte",  label: "Transporte",       icon: "🚗", color: "#3b82f6", type: "expense" },
   { id: "saude",       label: "Saúde",            icon: "💊", color: "#10b981", type: "expense" },
-  { id: "lazer",       label: "Lazer",            icon: "🎉", color: "#ec4899", type: "expense" },
-  { id: "educacao",    label: "Educação",         icon: "📚", color: "#8b5cf6", type: "expense" },
-  { id: "vestuario",   label: "Vestuário",        icon: "👗", color: "#f97316", type: "expense" },
+  { id: "lazer",       label: "Lazer",            icon: "🎉", color: "#FF3D7F", type: "expense" },
+  { id: "educacao",    label: "Educação",         icon: "📚", color: "#3B7BFF", type: "expense" },
+  { id: "vestuario",   label: "Vestuário",        icon: "👗", color: "#E8930A", type: "expense" },
   { id: "pessoal",     label: "Gastos Pessoais",  icon: "👤", color: "#14b8a6", type: "expense" },
-  { id: "dividas",     label: "Dívidas/Parcelas", icon: "💳", color: "#ef4444", type: "expense" },
-  { id: "salario",     label: "Salário",          icon: "💼", color: "#00FF88", type: "income"  },
-  { id: "freela",      label: "Freelance/Extra",  icon: "💡", color: "#06b6d4", type: "income"  },
-  { id: "outros",      label: "Outros",           icon: "📦", color: "#94a3b8", type: "both"    },
+  { id: "dividas",     label: "Dívidas/Parcelas", icon: "💳", color: "#E23D5B", type: "expense" },
+  { id: "salario",     label: "Salário",          icon: "💼", color: "#00B86B", type: "income"  },
+  { id: "freela",      label: "Freelance/Extra",  icon: "💡", color: "#3B7BFF", type: "income"  },
+  { id: "outros",      label: "Outros",           icon: "📦", color: "#8A91A3", type: "both"    },
 ];
 
 const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -74,7 +74,7 @@ const monthKey = () => { const d=new Date(); return `${d.getFullYear()}-${String
 // Nome legível de categoria: remove sufixo técnico "_1783870137705" e deixa bonito
 const prettyCat = (cid) => String(cid||"").replace(/[_-]?\d{9,}$/,"").replace(/[_-]+/g," ").trim().replace(/^\w/, c=>c.toUpperCase()) || "Outros";
 // Resolve categoria: acha na lista ou cria um fallback limpo (nome sem números)
-const catOf = (categories, id, icon="📦", color="#94a3b8") => categories.find(c=>c.id===id) || { id, label:prettyCat(id), icon, color };
+const catOf = (categories, id, icon="📦", color="#8A91A3") => categories.find(c=>c.id===id) || { id, label:prettyCat(id), icon, color };
 
 // ============================================================
 // DEMO DATA
@@ -134,16 +134,16 @@ function InstallPrompt(){
   if(!show) return null;
 
   const wrap    = { position:"fixed", left:12, right:12, bottom:14, zIndex:9999, display:"flex", justifyContent:"center", pointerEvents:"none" };
-  const card    = { pointerEvents:"auto", width:"100%", maxWidth:440, background:"#14172E", border:"1px solid #2a2d4a", borderRadius:18, padding:"14px 16px", boxShadow:"0 12px 40px rgba(0,0,0,.45)", color:"#fff", fontFamily:"Nunito, sans-serif" };
+  const card    = { pointerEvents:"auto", width:"100%", maxWidth:440, background:"#FFFFFF", border:"1px solid #E7E9F0", borderRadius:18, padding:"14px 16px", boxShadow:"0 12px 40px rgba(0,0,0,.45)", color:"#fff", fontFamily:"Inter, sans-serif" };
   const row     = { display:"flex", alignItems:"center", gap:12 };
-  const iconBox = { width:44, height:44, borderRadius:12, background:"linear-gradient(135deg,#0D0D1A,#1A1D37)", border:"1px solid #2a2d4a", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontWeight:900, color:"#00FF88", fontSize:19 };
-  const btn     = { background:"linear-gradient(135deg,#00FF88,#00c46a)", color:"#04120a", border:"none", borderRadius:10, padding:"9px 14px", fontWeight:800, fontSize:14, cursor:"pointer", whiteSpace:"nowrap" };
-  const xbtn    = { background:"transparent", color:"#6b7280", border:"none", fontSize:22, cursor:"pointer", lineHeight:1, padding:"0 4px" };
+  const iconBox = { width:44, height:44, borderRadius:12, background:"#F1F3F7", border:"1px solid #E7E9F0", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontWeight:900, color:"#00B86B", fontSize:19 };
+  const btn     = { background:"#00B86B", color:"#04120a", border:"none", borderRadius:10, padding:"9px 14px", fontWeight:800, fontSize:14, cursor:"pointer", whiteSpace:"nowrap" };
+  const xbtn    = { background:"transparent", color:"#8A91A3", border:"none", fontSize:22, cursor:"pointer", lineHeight:1, padding:"0 4px" };
   const ShareIcon = function(){ return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{verticalAlign:"-3px"}}>
-      <path d="M12 3v12" stroke="#00FF88" strokeWidth="2.2" strokeLinecap="round"/>
-      <path d="M8 7l4-4 4 4" stroke="#00FF88" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" stroke="#00FF88" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 3v12" stroke="#00B86B" strokeWidth="2.2" strokeLinecap="round"/>
+      <path d="M8 7l4-4 4 4" stroke="#00B86B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" stroke="#00B86B" strokeWidth="2" strokeLinecap="round"/>
     </svg>
   ); };
 
@@ -154,7 +154,7 @@ function InstallPrompt(){
           <div style={iconBox}>iG</div>
           <div style={{flex:1, minWidth:0}}>
             <div style={{fontWeight:900, fontSize:15}}>{"\U0001F4F2"} Instale o iGastei</div>
-            <div style={{fontSize:12.5, color:"#aab", marginTop:1}}>
+            <div style={{fontSize:12.5, color:"#8A91A3", marginTop:1}}>
               {mode==="android"    && "Acesso rápido na sua tela inicial."}
               {mode==="ios-safari" && "Adicione à tela inicial pra abrir como app."}
               {mode==="ios-other"  && "Abra no Safari pra instalar como app."}
@@ -169,7 +169,7 @@ function InstallPrompt(){
         </div>
 
         {mode==="ios-safari" && expand && (
-          <div style={{marginTop:12, paddingTop:12, borderTop:"1px solid #2a2d4a", fontSize:13.5, lineHeight:1.8, color:"#dfe3ee"}}>
+          <div style={{marginTop:12, paddingTop:12, borderTop:"1px solid #E7E9F0", fontSize:13.5, lineHeight:1.8, color:"#555c6b"}}>
             <div>1. Toque em <ShareIcon/> <b>Compartilhar</b> (na barra de baixo).</div>
             <div>2. Role e toque em <b>{"“"}Adicionar {"à"} Tela de In{"í"}cio{"”"}</b>.</div>
             <div>3. Toque em <b>Adicionar</b>. Pronto! 💚</div>
@@ -177,7 +177,7 @@ function InstallPrompt(){
         )}
 
         {mode==="ios-other" && (
-          <div style={{marginTop:10, fontSize:12.5, color:"#dfe3ee"}}>
+          <div style={{marginTop:10, fontSize:12.5, color:"#555c6b"}}>
             Copie o link e abra no <b>Safari</b> {"—"} depois {"é"} s{"ó"} {"“"}Adicionar {"à"} Tela de In{"í"}cio{"”"}.
           </div>
         )}
@@ -530,7 +530,7 @@ export default function App() {
   const overlays = (
     <>
       <InstallPrompt />
-      {toast && <div style={{...S.toast, background: toast.type==="error"?"#FF3D7F":toast.type==="info"?"#6366f1":"#00FF88", color: toast.type==="success"?"#0D0D1A":"#fff"}}>{toast.msg}</div>}
+      {toast && <div style={{...S.toast, background: toast.type==="error"?"#FF3D7F":toast.type==="info"?"#3B7BFF":"#00B86B", color: toast.type==="success"?"#0D0D1A":"#fff"}}>{toast.msg}</div>}
       {showUpgrade && <UpgradeScreen user={user} accountData={accountData} fb={fb} onClose={()=>setShowUpgrade(false)}/>}
       {showSuccess && <UpgradeSuccess onClose={()=>setShowSuccess(false)}/>}
     </>
@@ -579,7 +579,7 @@ function Sidebar({tab,onTab,demo,onLogout,user,accountData,planInfo,totalLancame
   return(
     <aside style={S.sidebar}>
       <div style={{padding:"22px 20px 14px"}}>
-        <div style={{fontWeight:900,fontSize:23,letterSpacing:"-.5px"}}>💸 <span style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGastei</span></div>
+        <div style={{fontWeight:900,fontSize:23,letterSpacing:"-.5px"}}>💸 <span style={{background:"#00B86B",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGastei</span></div>
       </div>
       <nav style={{flex:1,padding:"6px 12px",display:"flex",flexDirection:"column",gap:4}}>
         {items.map(it=>(
@@ -591,19 +591,19 @@ function Sidebar({tab,onTab,demo,onLogout,user,accountData,planInfo,totalLancame
         ))}
       </nav>
       {isExplorador && !demo && (
-        <div style={{margin:"0 14px 12px",background:"linear-gradient(135deg,#1a1a2e,#16213e)",border:"1px solid #00FF8833",borderRadius:12,padding:14}}>
-          <div style={{fontSize:12,color:"#00FF88",fontWeight:800}}>🎮 Modo Explorador</div>
-          <div style={{fontSize:11,color:"#6b7280",margin:"3px 0 8px"}}>{totalLancamentos}/10 lançamentos</div>
-          <button style={{width:"100%",background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:8,padding:"8px",fontWeight:800,fontSize:12,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>Fazer upgrade ⚡</button>
+        <div style={{margin:"0 14px 12px",background:"#FFFFFF",border:"1px solid #00FF8833",borderRadius:12,padding:14}}>
+          <div style={{fontSize:12,color:"#00B86B",fontWeight:800}}>🎮 Modo Explorador</div>
+          <div style={{fontSize:11,color:"#8A91A3",margin:"3px 0 8px"}}>{totalLancamentos}/10 lançamentos</div>
+          <button style={{width:"100%",background:"#00B86B",border:"none",borderRadius:8,padding:"8px",fontWeight:800,fontSize:12,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>Fazer upgrade ⚡</button>
         </div>
       )}
-      <div style={{borderTop:"1px solid #1e2035",padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
-        <div style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#00FF88,#FFD60A)",flexShrink:0}}/>
+      <div style={{borderTop:"1px solid #EEF0F4",padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
+        <div style={{width:34,height:34,borderRadius:"50%",background:"#00B86B",flexShrink:0}}/>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{firstName}</div>
-          <div style={{fontSize:10,color:"#475569"}}>{demo?"Demo":planInfo?.name}</div>
+          <div style={{fontWeight:700,fontSize:13,color:"#0D0D1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{firstName}</div>
+          <div style={{fontSize:10,color:"#9AA1B2"}}>{demo?"Demo":planInfo?.name}</div>
         </div>
-        <button style={{background:"none",border:"1px solid #1e2035",borderRadius:8,color:"#94a3b8",fontSize:12,padding:"6px 10px",cursor:"pointer"}} onClick={onLogout}>Sair</button>
+        <button style={{background:"none",border:"1px solid #EEF0F4",borderRadius:8,color:"#8A91A3",fontSize:12,padding:"6px 10px",cursor:"pointer"}} onClick={onLogout}>Sair</button>
       </div>
     </aside>
   );
@@ -620,16 +620,16 @@ function TopBar({month,onMonth,accountData,planInfo}){
   return(
     <header style={S.topbar}>
       <div>
-        <div style={{fontSize:12,color:"#6b7280"}}>olá,</div>
-        <div style={{fontWeight:800,fontSize:18,color:"#e2e8f0"}}>{firstName} 👋</div>
+        <div style={{fontSize:12,color:"#8A91A3"}}>olá,</div>
+        <div style={{fontWeight:800,fontSize:18,color:"#0D0D1A"}}>{firstName} 👋</div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:14}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,background:"#111827",border:"1px solid #1e2035",borderRadius:10,padding:"6px 8px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,background:"#FFFFFF",border:"1px solid #EEF0F4",borderRadius:10,padding:"6px 8px"}}>
           <button style={S.monthBtn} onClick={prev}>‹</button>
           <span style={{fontWeight:700,fontSize:14,minWidth:96,textAlign:"center"}}>{MONTHS[m-1]} {y}</span>
           <button style={S.monthBtn} onClick={next}>›</button>
         </div>
-        {planInfo?.limit===Infinity && <span style={{fontSize:12,fontWeight:800,color:"#0D0D1A",background:"linear-gradient(135deg,#00FF88,#FFD60A)",padding:"6px 12px",borderRadius:100}}>{planInfo.name}</span>}
+        {planInfo?.limit===Infinity && <span style={{fontSize:12,fontWeight:800,color:"#0D0D1A",background:"#00B86B",padding:"6px 12px",borderRadius:100}}>{planInfo.name}</span>}
       </div>
     </header>
   );
@@ -651,13 +651,13 @@ function LoginScreen({onLogin,onForgot,onDemo,loading,toast,initialRef}){
 
   return(
     <div style={S.loginRoot}>
-      {toast && <div style={{...S.toast,background:toast.type==="error"?"#FF3D7F":"#00FF88",color:toast.type==="success"?"#0D0D1A":"#fff"}}>{toast.msg}</div>}
+      {toast && <div style={{...S.toast,background:toast.type==="error"?"#FF3D7F":"#00B86B",color:toast.type==="success"?"#0D0D1A":"#fff"}}>{toast.msg}</div>}
       <div style={S.loginCard}>
         {/* Logo */}
         <div style={{textAlign:"center",marginBottom:24}}>
           <div style={{fontSize:40,marginBottom:4}}>💸</div>
-          <div style={{fontWeight:900,fontSize:28,background:"linear-gradient(135deg,#00FF88,#FFD60A)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:"-1px"}}>iGastei</div>
-          <div style={{fontSize:13,color:"#6b7280",marginTop:4}}>{reg?"Cria sua conta grátis":"Bem-vindo de volta"}</div>
+          <div style={{fontWeight:900,fontSize:28,background:"#00B86B",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",letterSpacing:"-1px"}}>iGastei</div>
+          <div style={{fontSize:13,color:"#8A91A3",marginTop:4}}>{reg?"Cria sua conta grátis":"Bem-vindo de volta"}</div>
         </div>
 
         {reg && (
@@ -703,20 +703,20 @@ function LoginScreen({onLogin,onForgot,onDemo,loading,toast,initialRef}){
         </button>
 
         {!reg && onForgot && (
-          <button style={{...S.btnLink,color:"#6b7280",fontSize:13,marginTop:2}} onClick={()=>onForgot(email)} disabled={loading}>
+          <button style={{...S.btnLink,color:"#8A91A3",fontSize:13,marginTop:2}} onClick={()=>onForgot(email)} disabled={loading}>
             Esqueci minha senha
           </button>
         )}
 
         {reg && (
-          <div style={{background:"#1a1a2e",borderRadius:10,padding:12,marginTop:8}}>
-            <div style={{fontSize:12,color:"#00FF88",fontWeight:700,marginBottom:4}}>🎮 Modo Explorador (grátis)</div>
-            <div style={{fontSize:11,color:"#6b7280"}}>10 lançamentos/mês pra você sentir o app. Depois é só fazer upgrade!</div>
+          <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:10,padding:12,marginTop:8}}>
+            <div style={{fontSize:12,color:"#00B86B",fontWeight:700,marginBottom:4}}>🎮 Modo Explorador (grátis)</div>
+            <div style={{fontSize:11,color:"#8A91A3"}}>10 lançamentos/mês pra você sentir o app. Depois é só fazer upgrade!</div>
           </div>
         )}
 
-        <div style={{textAlign:"center",color:"#334155",margin:"16px 0",borderTop:"1px solid #1e2035",lineHeight:0}}>
-          <span style={{background:"#0D0D1A",padding:"0 12px",color:"#475569",fontSize:12}}>ou</span>
+        <div style={{textAlign:"center",color:"#9AA1B2",margin:"16px 0",borderTop:"1px solid #EEF0F4",lineHeight:0}}>
+          <span style={{background:"#ECEEF2",padding:"0 12px",color:"#9AA1B2",fontSize:12}}>ou</span>
         </div>
         <button style={S.btnGhost} onClick={onDemo}>🎮 Experimentar sem cadastro</button>
       </div>
@@ -738,14 +738,14 @@ function Header({month,onMonth,demo,onLogout,user,accountData,planInfo,totalLanc
       <div style={{display:"flex",alignItems:"center",gap:12,minWidth:0}}>
         <div style={S.avatar}>{firstName[0]?.toUpperCase()}</div>
         <div style={{minWidth:0}}>
-          <div style={{fontWeight:900,fontSize:16,color:"#F5F7FA",letterSpacing:"-.02em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Olá, {firstName}</div>
-          <div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>{planName}</div>
+          <div style={{fontWeight:900,fontSize:16,color:"#0D0D1A",letterSpacing:"-.02em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Olá, {firstName}</div>
+          <div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>{planName}</div>
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={S.monthSel}>
           <button style={S.monthBtn} onClick={prev} aria-label="mês anterior">‹</button>
-          <span style={{fontSize:13.5,fontWeight:800,minWidth:58,textAlign:"center",color:"#F5F7FA"}}>{MONTHS[m-1]} {String(y).slice(2)}</span>
+          <span style={{fontSize:13.5,fontWeight:800,minWidth:58,textAlign:"center",color:"#0D0D1A"}}>{MONTHS[m-1]} {String(y).slice(2)}</span>
           <button style={S.monthBtn} onClick={next} aria-label="próximo mês">›</button>
         </div>
         <button style={S.btnLogout} onClick={onLogout}>Sair</button>
@@ -802,45 +802,45 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   incomes.forEach(i=>{ const k=i.userName||"—"; if(!byPerson[k]) byPerson[k]={in:0,out:0}; byPerson[k].in+=Number(i.amount); });
   expenses.forEach(e=>{ const k=e.userName||"—"; if(!byPerson[k]) byPerson[k]={in:0,out:0}; byPerson[k].out+=Number(e.amount); });
 
-  const Card = {background:"#14172E",borderRadius:18,padding:18};
-  const CTitle = {fontWeight:900,fontSize:16,color:"#F5F7FA"};
-  const CSub = {color:"#8b94ad",fontWeight:800,fontSize:12.5};
+  const Card = {background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:18,padding:18};
+  const CTitle = {fontWeight:900,fontSize:16,color:"#0D0D1A"};
+  const CSub = {color:"#8A91A3",fontWeight:800,fontSize:12.5};
 
   const banner = isExplorador && (
     <div style={Card}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
         <div style={{minWidth:0}}>
-          <div style={{fontSize:14,color:"#00FF88",fontWeight:900}}>Modo Explorador</div>
-          <div style={{fontSize:12.5,color:"#8b94ad",marginTop:2,fontWeight:700}}>{totalLancamentos}/10 lançamentos este mês</div>
+          <div style={{fontSize:14,color:"#00B86B",fontWeight:900}}>Modo Explorador</div>
+          <div style={{fontSize:12.5,color:"#8A91A3",marginTop:2,fontWeight:700}}>{totalLancamentos}/10 lançamentos este mês</div>
         </div>
-        <button onClick={onUpgrade} style={{background:"#00FF88",color:"#04120a",border:"none",borderRadius:12,padding:"12px 16px",fontWeight:900,fontSize:13.5,cursor:"pointer",minHeight:44,whiteSpace:"nowrap"}}>Virar Pro ⚡</button>
+        <button onClick={onUpgrade} style={{background:"#00B86B",color:"#04120a",border:"none",borderRadius:12,padding:"12px 16px",fontWeight:900,fontSize:13.5,cursor:"pointer",minHeight:44,whiteSpace:"nowrap"}}>Virar Pro ⚡</button>
       </div>
-      <div style={{marginTop:12,height:8,background:"#0f1626",borderRadius:5,overflow:"hidden"}}>
-        <div style={{height:"100%",width:`${Math.min(100,(totalLancamentos/10)*100)}%`,background:"#00FF88",borderRadius:5,transition:"width .5s"}}/>
+      <div style={{marginTop:12,height:8,background:"#EEF0F4",borderRadius:5,overflow:"hidden"}}>
+        <div style={{height:"100%",width:`${Math.min(100,(totalLancamentos/10)*100)}%`,background:"#00B86B",borderRadius:5,transition:"width .5s"}}/>
       </div>
     </div>
   );
 
   const heroSaldo = (
-    <div style={{background:"#14172E",borderRadius:22,padding:isDesktop?24:22}}>
+    <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:22,padding:isDesktop?24:22}}>
       <div style={CSub}>Saldo atual · {mName}</div>
-      <div style={{fontWeight:900,fontSize:isDesktop?44:46,color:balance>=0?"#00FF88":"#FF3D7F",letterSpacing:"-.03em",lineHeight:1,marginTop:8,...num}}>{fmt(balance)}</div>
-      <div style={{display:"inline-block",marginTop:14,background:balance>=0?"#00FF8818":"#FF3D7F18",color:balance>=0?"#00FF88":"#FF3D7F",fontWeight:800,fontSize:12.5,padding:"6px 12px",borderRadius:10}}>{balance>=0?"✓ tudo certo, sobra no mês":"⚠️ os gastos passaram das entradas"}</div>
+      <div style={{fontWeight:900,fontSize:isDesktop?44:46,color:balance>=0?"#00B86B":"#FF3D7F",letterSpacing:"-.03em",lineHeight:1,marginTop:8,...num}}>{fmt(balance)}</div>
+      <div style={{display:"inline-block",marginTop:14,background:balance>=0?"#00FF8818":"#FF3D7F18",color:balance>=0?"#00B86B":"#FF3D7F",fontWeight:800,fontSize:12.5,padding:"6px 12px",borderRadius:10}}>{balance>=0?"✓ tudo certo, sobra no mês":"⚠️ os gastos passaram das entradas"}</div>
     </div>
   );
 
   const statEntradas = (
     <div style={Card}>
       <div style={CSub}>Entradas</div>
-      <div style={{fontWeight:900,fontSize:23,color:"#00FF88",marginTop:6,letterSpacing:"-.02em",...num}}>{fmt(totalIn)}</div>
-      <div style={{fontSize:11.5,color:"#5b647d",fontWeight:700,marginTop:2}}>{incomes.length} lançamentos</div>
+      <div style={{fontWeight:900,fontSize:23,color:"#00B86B",marginTop:6,letterSpacing:"-.02em",...num}}>{fmt(totalIn)}</div>
+      <div style={{fontSize:11.5,color:"#9AA1B2",fontWeight:700,marginTop:2}}>{incomes.length} lançamentos</div>
     </div>
   );
   const statGastos = (
     <div style={Card}>
       <div style={CSub}>Gastos</div>
       <div style={{fontWeight:900,fontSize:23,color:"#FF3D7F",marginTop:6,letterSpacing:"-.02em",...num}}>{fmt(totalOut)}</div>
-      <div style={{fontSize:11.5,color:"#5b647d",fontWeight:700,marginTop:2}}>{expenses.length} lançamentos</div>
+      <div style={{fontSize:11.5,color:"#9AA1B2",fontWeight:700,marginTop:2}}>{expenses.length} lançamentos</div>
     </div>
   );
 
@@ -848,15 +848,15 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
   const previstoCard = temPrevisto && (
     <div style={Card}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <span style={{...CTitle,color:"#FFD60A"}}>Previsto do mês</span>
+        <span style={{...CTitle,color:"#E8930A"}}>Previsto do mês</span>
         <span style={CSub}>a pagar e a receber</span>
       </div>
       <div style={{display:"flex",justifyContent:"space-between",gap:10}}>
-        <div><div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>a receber</div><div style={{fontWeight:900,fontSize:18,color:"#00FF88",marginTop:3,...num}}>+{fmt(previstoIn)}</div></div>
-        <div><div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>a pagar</div><div style={{fontWeight:900,fontSize:18,color:"#FF3D7F",marginTop:3,...num}}>-{fmt(previstoOut)}</div></div>
-        <div style={{textAlign:"right"}}><div style={{fontSize:12,color:"#8b94ad",fontWeight:700}}>saldo previsto</div><div style={{fontWeight:900,fontSize:20,color:saldoPrevisto>=0?"#FFD60A":"#FF3D7F",marginTop:3,...num}}>{fmt(saldoPrevisto)}</div></div>
+        <div><div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>a receber</div><div style={{fontWeight:900,fontSize:18,color:"#00B86B",marginTop:3,...num}}>+{fmt(previstoIn)}</div></div>
+        <div><div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>a pagar</div><div style={{fontWeight:900,fontSize:18,color:"#FF3D7F",marginTop:3,...num}}>-{fmt(previstoOut)}</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>saldo previsto</div><div style={{fontWeight:900,fontSize:20,color:saldoPrevisto>=0?"#E8930A":"#FF3D7F",marginTop:3,...num}}>{fmt(saldoPrevisto)}</div></div>
       </div>
-      <div style={{fontSize:12,color:"#5b647d",marginTop:12,lineHeight:1.4,fontWeight:600}}>Saldo atual ({fmt(balance)}) + o que ainda entra − o que ainda sai.</div>
+      <div style={{fontSize:12,color:"#9AA1B2",marginTop:12,lineHeight:1.4,fontWeight:600}}>Saldo atual ({fmt(balance)}) + o que ainda entra − o que ainda sai.</div>
     </div>
   );
 
@@ -875,10 +875,10 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
       ):(
         <>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:14,fontWeight:800,marginBottom:8}}>
-            <span style={{color:"#c7cde0",...num}}>{fmt(saved)} <span style={{color:"#8b94ad",fontWeight:700}}>de {fmt(goal)}</span></span>
-            <span style={{color:goalPct>=100?"#00FF88":"#FFD60A"}}>{goalPct}%</span>
+            <span style={{color:"#555c6b",...num}}>{fmt(saved)} <span style={{color:"#8A91A3",fontWeight:700}}>de {fmt(goal)}</span></span>
+            <span style={{color:goalPct>=100?"#00B86B":"#E8930A"}}>{goalPct}%</span>
           </div>
-          <ProgressBar pct={goalPct} color={goalPct>=100?"#00FF88":"#FFD60A"}/>
+          <ProgressBar pct={goalPct} color={goalPct>=100?"#00B86B":"#E8930A"}/>
         </>
       )}
     </div>
@@ -889,15 +889,15 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
       <div style={{...CTitle,marginBottom:14}}>Por pessoa</div>
       {Object.entries(byPerson).map(([name,v])=>(
         <div key={name} style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-          <div style={{width:40,height:40,background:"#1f2440",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#F5F7FA",fontSize:16,flexShrink:0}}>{name[0]?.toUpperCase()}</div>
+          <div style={{width:40,height:40,background:"#EEF0F4",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#0D0D1A",fontSize:16,flexShrink:0}}>{name[0]?.toUpperCase()}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:800,fontSize:14.5,color:"#F5F7FA"}}>{name}</div>
+            <div style={{fontWeight:800,fontSize:14.5,color:"#0D0D1A"}}>{name}</div>
             <div style={{display:"flex",gap:12,fontSize:12.5,marginTop:2,fontWeight:700,...num}}>
-              <span style={{color:"#00FF88"}}>+{fmt(v.in)}</span>
+              <span style={{color:"#00B86B"}}>+{fmt(v.in)}</span>
               <span style={{color:"#FF3D7F"}}>-{fmt(v.out)}</span>
             </div>
           </div>
-          <div style={{fontWeight:900,fontSize:15,color:v.in-v.out>=0?"#FFD60A":"#FF3D7F",...num}}>{fmt(v.in-v.out)}</div>
+          <div style={{fontWeight:900,fontSize:15,color:v.in-v.out>=0?"#E8930A":"#FF3D7F",...num}}>{fmt(v.in-v.out)}</div>
         </div>
       ))}
     </div>
@@ -910,12 +910,12 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
         <span style={CSub}>{mName}</span>
       </div>
       {Object.entries(byCatExp).sort((a,b)=>b[1]-a[1]).slice(0,isDesktop?8:5).map(([cid,val])=>{
-        const cat=categories.find(c=>c.id===cid)||{label:prettyCat(cid),icon:"📦",color:"#94a3b8"};
+        const cat=categories.find(c=>c.id===cid)||{label:prettyCat(cid),icon:"📦",color:"#8A91A3"};
         const pct=totalOut>0?(val/totalOut)*100:0;
         return(
           <div key={cid} style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
-              <span style={{fontSize:14.5,fontWeight:800,color:"#F5F7FA"}}>{cat.icon} {cat.label}</span>
+              <span style={{fontSize:14.5,fontWeight:800,color:"#0D0D1A"}}>{cat.icon} {cat.label}</span>
               <span style={{fontWeight:900,fontSize:14.5,color:cat.color,...num}}>{fmt(val)}</span>
             </div>
             <ProgressBar pct={pct} color={cat.color}/>
@@ -940,9 +940,9 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
           return(
             <div key={d.month} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
               <div style={{width:"100%",height:isDesktop?100:64,display:"flex",alignItems:"flex-end"}}>
-                <div style={{width:"100%",height:`${hOut}%`,background:isCurrent?"#FF3D7F":"#232845",borderRadius:"7px 7px 2px 2px",minHeight:4}}/>
+                <div style={{width:"100%",height:`${hOut}%`,background:isCurrent?"#FF3D7F":"#E4E7EE",borderRadius:"7px 7px 2px 2px",minHeight:4}}/>
               </div>
-              <span style={{fontSize:11,color:isCurrent?"#00FF88":"#5b647d",fontWeight:isCurrent?900:700}}>{MONTHS[m2-1]}</span>
+              <span style={{fontSize:11,color:isCurrent?"#00B86B":"#9AA1B2",fontWeight:isCurrent?900:700}}>{MONTHS[m2-1]}</span>
             </div>
           );
         })}
@@ -978,7 +978,7 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
 }
 
 function ProgressBar({pct,color}){
-  return <div style={{height:12,background:"#0f1626",borderRadius:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:color,borderRadius:7,transition:"width .5s"}}/></div>;
+  return <div style={{height:12,background:"#EEF0F4",borderRadius:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,pct)}%`,background:color,borderRadius:7,transition:"width .5s"}}/></div>;
 }
 
 // ============================================================
@@ -994,7 +994,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
   const [newCat,setNewCat]=useState(false);
   const [ncLabel,setNcLabel]=useState("");
   const [ncIcon,setNcIcon]=useState(isIncome?"💡":"📌");
-  const [ncColor,setNcColor]=useState(isIncome?"#00FF88":"#6366f1");
+  const [ncColor,setNcColor]=useState(isIncome?"#00B86B":"#3B7BFF");
   const [status,setStatus]=useState(item?.status==="previsto"?"previsto":"pago");
   const [recorrente,setRecorrente]=useState(!!item?.recorrente);
 
@@ -1009,8 +1009,8 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
     <div style={S.overlay} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <div style={S.modal}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <h3 style={{color:"#e2e8f0",fontWeight:800,fontSize:16,margin:0}}>{item?"Editar":"Nova"} {isIncome?"entrada":"despesa"}</h3>
-          <button style={{background:"none",border:"none",color:"#6b7280",fontSize:20,cursor:"pointer"}} onClick={onClose}>✕</button>
+          <h3 style={{color:"#0D0D1A",fontWeight:800,fontSize:16,margin:0}}>{item?"Editar":"Nova"} {isIncome?"entrada":"despesa"}</h3>
+          <button style={{background:"none",border:"none",color:"#8A91A3",fontSize:20,cursor:"pointer"}} onClick={onClose}>✕</button>
         </div>
 
         <div style={S.fg}><label style={S.label}>Descrição</label>
@@ -1029,12 +1029,12 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
         <div style={S.fg}>
           <label style={S.label}>Situação</label>
           <div style={{display:"flex",gap:8}}>
-            <button type="button" onClick={()=>setStatus("pago")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="pago"?(isIncome?"#00FF88":"#FF3D7F"):"#1e2035"}`,background:status==="pago"?(isIncome?"rgba(0,255,136,.13)":"rgba(255,61,127,.13)"):"#0D0D1A",color:"#e2e8f0"}}>{isIncome?"✅ Já recebi":"✅ Já paguei"}</button>
-            <button type="button" onClick={()=>setStatus("previsto")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="previsto"?"#FFD60A":"#1e2035"}`,background:status==="previsto"?"rgba(255,214,10,.13)":"#0D0D1A",color:"#e2e8f0"}}>📅 {isIncome?"A receber":"A pagar"}</button>
+            <button type="button" onClick={()=>setStatus("pago")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="pago"?(isIncome?"#00B86B":"#FF3D7F"):"#EEF0F4"}`,background:status==="pago"?(isIncome?"rgba(0,255,136,.13)":"rgba(255,61,127,.13)"):"#0D0D1A",color:"#0D0D1A"}}>{isIncome?"✅ Já recebi":"✅ Já paguei"}</button>
+            <button type="button" onClick={()=>setStatus("previsto")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="previsto"?"#E8930A":"#EEF0F4"}`,background:status==="previsto"?"rgba(255,214,10,.13)":"#0D0D1A",color:"#0D0D1A"}}>📅 {isIncome?"A receber":"A pagar"}</button>
           </div>
           {status==="previsto" && (
-            <label style={{display:"flex",alignItems:"center",gap:8,marginTop:10,fontSize:13,color:"#cbd5e1",cursor:"pointer"}}>
-              <input type="checkbox" checked={recorrente} onChange={e=>setRecorrente(e.target.checked)} style={{width:18,height:18,accentColor:"#FFD60A"}}/>
+            <label style={{display:"flex",alignItems:"center",gap:8,marginTop:10,fontSize:13,color:"#8A91A3",cursor:"pointer"}}>
+              <input type="checkbox" checked={recorrente} onChange={e=>setRecorrente(e.target.checked)} style={{width:18,height:18,accentColor:"#E8930A"}}/>
               🔁 Repete todo mês (conta fixa)
             </label>
           )}
@@ -1046,7 +1046,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
             <button style={S.btnSm} onClick={()=>setNewCat(!newCat)}>{newCat?"cancelar":"+ nova"}</button>
           </div>
           {newCat?(
-            <div style={{background:"#0D0D1A",borderRadius:10,padding:12,marginBottom:8}}>
+            <div style={{background:"#ECEEF2",borderRadius:10,padding:12,marginBottom:8}}>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
                 <input style={{...S.input,flex:"0 0 55px",textAlign:"center",fontSize:20,padding:"6px"}} value={ncIcon} onChange={e=>setNcIcon(e.target.value)}/>
                 <input style={{...S.input,flex:1}} value={ncLabel} onChange={e=>setNcLabel(e.target.value)} placeholder="Nome da categoria"/>
@@ -1058,7 +1058,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6,maxHeight:200,overflowY:"auto"}}>
               {validCats.map(c=>(
                 <button key={c.id} onClick={()=>setCat(c.id)}
-                  style={{background:cat===c.id?c.color+"22":"#0D0D1A",border:`2px solid ${cat===c.id?c.color:"#1e2035"}`,borderRadius:10,padding:"8px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:8,color:"#e2e8f0",fontSize:12,fontWeight:600,transition:"all .15s"}}>
+                  style={{background:cat===c.id?c.color+"22":"#0D0D1A",border:`2px solid ${cat===c.id?c.color:"#EEF0F4"}`,borderRadius:10,padding:"8px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:8,color:"#0D0D1A",fontSize:12,fontWeight:600,transition:"all .15s"}}>
                   <span style={{fontSize:18}}>{c.icon}</span>
                   <span style={{flex:1,textAlign:"left",fontSize:11}}>{c.label}</span>
                 </button>
@@ -1067,7 +1067,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
           )}
         </div>
 
-        <button style={{...S.btnPrimary,background:isIncome?"linear-gradient(135deg,#00FF88,#06b6d4)":"linear-gradient(135deg,#FF3D7F,#f97316)",color:isIncome?"#0D0D1A":"#fff",marginTop:8}}
+        <button style={{...S.btnPrimary,background:isIncome?"#00B86B":"#FF3D7F",color:isIncome?"#0D0D1A":"#fff",marginTop:8}}
           onClick={()=>{ if(!desc||!amt)return; onSave({description:desc,amount:Number(amt)/100,category:cat,date,status,recorrente}); }}>
           {item?"Atualizar":"Salvar"} {isIncome?"entrada":"gasto"}
         </button>
@@ -1083,10 +1083,10 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
   const [form,setForm]=useState(null);
   const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?incomes:incomes.filter(i=>i.category===filter);
-  const activeCats=[...new Set(incomes.map(i=>i.category))].map(id=>catOf(categories,id,"💼","#00FF88"));
+  const activeCats=[...new Set(incomes.map(i=>i.category))].map(id=>catOf(categories,id,"💼","#00B86B"));
   const totalAll=incomes.reduce((s,i)=>s+Number(i.amount),0);
   const totalFiltered=filtered.reduce((s,i)=>s+Number(i.amount),0);
-  const filterCat=filter!=="all"?catOf(categories,filter,"💼","#00FF88"):null;
+  const filterCat=filter!=="all"?catOf(categories,filter,"💼","#00B86B"):null;
 
   return(
     <div style={{paddingBottom:80}}>
@@ -1107,20 +1107,20 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
 
       {filter==="all" && incomes.length>0 && (
         <div style={{...S.card,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px"}}>
-          <span style={{fontSize:12,color:"#6b7280",fontWeight:600}}>💰 Total do mês</span>
-          <span style={{fontWeight:900,fontSize:16,color:"#00FF88"}}>+{fmt(totalAll)}</span>
+          <span style={{fontSize:12,color:"#8A91A3",fontWeight:600}}>💰 Total do mês</span>
+          <span style={{fontWeight:900,fontSize:16,color:"#00B86B"}}>+{fmt(totalAll)}</span>
         </div>
       )}
       {filter!=="all" && filterCat && (
         <div style={{...S.card,marginBottom:10,borderLeft:`3px solid ${filterCat.color}`,padding:"10px 14px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
-              <div style={{fontSize:12,color:"#6b7280",fontWeight:600}}>{filterCat.icon} {filterCat.label}</div>
-              <div style={{fontSize:11,color:"#475569",marginTop:2}}>{filtered.length} lançamento{filtered.length!==1?"s":""}</div>
+              <div style={{fontSize:12,color:"#8A91A3",fontWeight:600}}>{filterCat.icon} {filterCat.label}</div>
+              <div style={{fontSize:11,color:"#9AA1B2",marginTop:2}}>{filtered.length} lançamento{filtered.length!==1?"s":""}</div>
             </div>
             <div style={{textAlign:"right"}}>
-              <div style={{fontWeight:900,fontSize:17,color:"#00FF88"}}>+{fmt(totalFiltered)}</div>
-              <div style={{fontSize:11,color:"#475569"}}>{totalAll>0?((totalFiltered/totalAll)*100).toFixed(1):0}% do total</div>
+              <div style={{fontWeight:900,fontSize:17,color:"#00B86B"}}>+{fmt(totalFiltered)}</div>
+              <div style={{fontSize:11,color:"#9AA1B2"}}>{totalAll>0?((totalFiltered/totalAll)*100).toFixed(1):0}% do total</div>
             </div>
           </div>
         </div>
@@ -1128,18 +1128,18 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
 
       {filtered.length===0 && <p style={S.empty}>Nenhuma entrada {filter!=="all"?"nesta categoria":"este mês"}</p>}
       {[...filtered].sort((a,b)=>(a.status==="previsto"?-1:0)-(b.status==="previsto"?-1:0)||b.createdAt-a.createdAt).map(inc=>{
-        const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#00FF88",label:prettyCat(inc.category)};
+        const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#00B86B",label:prettyCat(inc.category)};
         const previsto=inc.status==="previsto";
         return(
           <div key={inc.id} style={{...S.listItem,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
             <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0"}}>{inc.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#FFD60A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a receber{inc.recorrente?" 🔁":""}</span>}</div>
-              <div style={{fontSize:11,color:"#475569"}}>{previsto?`vence ${inc.date}`:inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A"}}>{inc.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#E8930A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a receber{inc.recorrente?" 🔁":""}</span>}</div>
+              <div style={{fontSize:11,color:"#9AA1B2"}}>{previsto?`vence ${inc.date}`:inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
-            <div style={{fontWeight:800,fontSize:15,color:"#00FF88",opacity:previsto?0.6:1}}>+{fmt(inc.amount)}</div>
+            <div style={{fontWeight:800,fontSize:15,color:"#00B86B",opacity:previsto?0.6:1}}>+{fmt(inc.amount)}</div>
             <div style={{display:"flex",gap:2}}>
-              {previsto&&<button style={{...S.btnIcon,color:"#00FF88"}} title="Marcar como recebido" onClick={()=>onEdit(inc.id,{status:"pago"})}>✅</button>}
+              {previsto&&<button style={{...S.btnIcon,color:"#00B86B"}} title="Marcar como recebido" onClick={()=>onEdit(inc.id,{status:"pago"})}>✅</button>}
               <button style={S.btnIcon} onClick={()=>setForm(inc)}>✏️</button>
               <button style={S.btnIcon} onClick={()=>onDelete(inc.id)}>🗑</button>
             </div>
@@ -1166,7 +1166,7 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
     <div style={{paddingBottom:80}}>
       <div style={S.secHeader}>
         <h2 style={S.secTitle}>💸 Gastos</h2>
-        <button style={{...S.btnPrimary,background:"linear-gradient(135deg,#FF3D7F,#f97316)",color:"#fff"}} onClick={()=>setForm("new")}>+ Adicionar</button>
+        <button style={{...S.btnPrimary,background:"#FF3D7F",color:"#fff"}} onClick={()=>setForm("new")}>+ Adicionar</button>
       </div>
       {form && <ItemForm type="expense" categories={categories} item={form==="new"?null:form} onAddCat={onAddCat} onSave={d=>{ form==="new"?onAdd(d):onEdit(form.id,d); setForm(null); }} onClose={()=>setForm(null)}/>}
 
@@ -1181,7 +1181,7 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
 
       {filter==="all" && expenses.length>0 && (
         <div style={{...S.card,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px"}}>
-          <span style={{fontSize:12,color:"#6b7280",fontWeight:600}}>💸 Total do mês</span>
+          <span style={{fontSize:12,color:"#8A91A3",fontWeight:600}}>💸 Total do mês</span>
           <span style={{fontWeight:900,fontSize:16,color:"#FF3D7F"}}>-{fmt(totalAll)}</span>
         </div>
       )}
@@ -1189,12 +1189,12 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
         <div style={{...S.card,marginBottom:10,borderLeft:`3px solid ${filterCat.color}`,padding:"10px 14px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
-              <div style={{fontSize:12,color:"#6b7280",fontWeight:600}}>{filterCat.icon} {filterCat.label}</div>
-              <div style={{fontSize:11,color:"#475569",marginTop:2}}>{filtered.length} lançamento{filtered.length!==1?"s":""}</div>
+              <div style={{fontSize:12,color:"#8A91A3",fontWeight:600}}>{filterCat.icon} {filterCat.label}</div>
+              <div style={{fontSize:11,color:"#9AA1B2",marginTop:2}}>{filtered.length} lançamento{filtered.length!==1?"s":""}</div>
             </div>
             <div style={{textAlign:"right"}}>
               <div style={{fontWeight:900,fontSize:17,color:"#FF3D7F"}}>-{fmt(totalFiltered)}</div>
-              <div style={{fontSize:11,color:"#475569"}}>{totalAll>0?((totalFiltered/totalAll)*100).toFixed(1):0}% do total</div>
+              <div style={{fontSize:11,color:"#9AA1B2"}}>{totalAll>0?((totalFiltered/totalAll)*100).toFixed(1):0}% do total</div>
             </div>
           </div>
         </div>
@@ -1202,18 +1202,18 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
 
       {filtered.length===0 && <p style={S.empty}>Nenhum gasto {filter!=="all"?"nesta categoria":"este mês"}</p>}
       {[...filtered].sort((a,b)=>(a.status==="previsto"?-1:0)-(b.status==="previsto"?-1:0)||b.createdAt-a.createdAt).map(exp=>{
-        const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#94a3b8",label:prettyCat(exp.category)};
+        const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#8A91A3",label:prettyCat(exp.category)};
         const previsto=exp.status==="previsto";
         return(
           <div key={exp.id} style={{...S.listItem,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
             <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0"}}>{exp.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#FFD60A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a pagar{exp.recorrente?" 🔁":""}</span>}</div>
-              <div style={{fontSize:11,color:"#475569"}}>{previsto?`vence ${exp.date}`:exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A"}}>{exp.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#E8930A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a pagar{exp.recorrente?" 🔁":""}</span>}</div>
+              <div style={{fontSize:11,color:"#9AA1B2"}}>{previsto?`vence ${exp.date}`:exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
             <div style={{fontWeight:800,fontSize:15,color:"#FF3D7F",opacity:previsto?0.6:1}}>-{fmt(exp.amount)}</div>
             <div style={{display:"flex",gap:2}}>
-              {previsto&&<button style={{...S.btnIcon,color:"#00FF88"}} title="Marcar como pago" onClick={()=>onEdit(exp.id,{status:"pago"})}>✅</button>}
+              {previsto&&<button style={{...S.btnIcon,color:"#00B86B"}} title="Marcar como pago" onClick={()=>onEdit(exp.id,{status:"pago"})}>✅</button>}
               <button style={S.btnIcon} onClick={()=>setForm(exp)}>✏️</button>
               <button style={S.btnIcon} onClick={()=>onDelete(exp.id)}>🗑</button>
             </div>
@@ -1239,12 +1239,12 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
       const cat=categories.find(c=>c.id===cid)||{label:prettyCat(cid),icon:"📦"};
       return `<tr><td>${cat.icon} ${cat.label}</td><td style="text-align:right;color:#FF3D7F">${fmt(v)}</td><td style="text-align:right">${totalOut>0?((v/totalOut)*100).toFixed(1)+"%":"-"}</td></tr>`;
     }).join("");
-    const incRows=incomes.map(i=>{ const cat=categories.find(c=>c.id===i.category)||{label:prettyCat(i.category),icon:"💰"}; return `<tr><td>${i.date}</td><td>${i.description}</td><td>${i.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#00FF88;text-align:right">+${fmt(i.amount)}</td></tr>`; }).join("");
+    const incRows=incomes.map(i=>{ const cat=categories.find(c=>c.id===i.category)||{label:prettyCat(i.category),icon:"💰"}; return `<tr><td>${i.date}</td><td>${i.description}</td><td>${i.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#00B86B;text-align:right">+${fmt(i.amount)}</td></tr>`; }).join("");
     const expRows=expenses.map(e=>{ const cat=categories.find(c=>c.id===e.category)||{label:prettyCat(e.category),icon:"📦"}; return `<tr><td>${e.date}</td><td>${e.description}</td><td>${e.userName||"—"}</td><td>${cat.icon} ${cat.label}</td><td style="color:#FF3D7F;text-align:right">-${fmt(e.amount)}</td></tr>`; }).join("");
     const saved=totalIn-totalOut;
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>iGastei – ${monthLabel}</title><style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:32px;color:#1e293b;max-width:800px;margin:0 auto;background:#f8fafc;}h1{color:#0D0D1A;font-size:26px;}h2{color:#6366f1;font-size:16px;margin:24px 0 8px;border-bottom:2px solid #e2e8f0;padding-bottom:4px;}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}.card{border-radius:10px;padding:14px;text-align:center;}.g{background:#dcfce7;}.r{background:#fee2e2;}.b{background:#ede9fe;}.val{font-size:18px;font-weight:900;margin:4px 0;}.lbl{font-size:11px;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f1f5f9;padding:7px 8px;text-align:left;font-weight:700;}td{padding:6px 8px;border-bottom:1px solid #f1f5f9;}.meta{background:#ede9fe;border-radius:8px;padding:12px;margin:12px 0;font-size:13px;}@media print{button{display:none!important;}}</style></head><body>
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>iGastei – ${monthLabel}</title><style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:32px;color:#1e293b;max-width:800px;margin:0 auto;background:#0D0D1A;}h1{color:#0D0D1A;font-size:26px;}h2{color:#3B7BFF;font-size:16px;margin:24px 0 8px;border-bottom:2px solid #0D0D1A;padding-bottom:4px;}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}.card{border-radius:10px;padding:14px;text-align:center;}.g{background:#E7F8EF;}.r{background:#FDECEF;}.b{background:#E7F8EF;}.val{font-size:18px;font-weight:900;margin:4px 0;}.lbl{font-size:11px;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#0D0D1A;padding:7px 8px;text-align:left;font-weight:700;}td{padding:6px 8px;border-bottom:1px solid #0D0D1A;}.meta{background:#E7F8EF;border-radius:8px;padding:12px;margin:12px 0;font-size:13px;}@media print{button{display:none!important;}}</style></head><body>
 <h1>💸 iGastei — ${monthLabel}</h1>
-<div class="cards"><div class="card g"><div class="lbl">Entradas</div><div class="val" style="color:#16a34a">${fmt(totalIn)}</div></div><div class="card r"><div class="lbl">Gastos</div><div class="val" style="color:#dc2626">${fmt(totalOut)}</div></div><div class="card b"><div class="lbl">Saldo</div><div class="val" style="color:${saved>=0?"#7c3aed":"#d97706"}">${fmt(saved)}</div></div></div>
+<div class="cards"><div class="card g"><div class="lbl">Entradas</div><div class="val" style="color:#16a34a">${fmt(totalIn)}</div></div><div class="card r"><div class="lbl">Gastos</div><div class="val" style="color:#E23D5B">${fmt(totalOut)}</div></div><div class="card b"><div class="lbl">Saldo</div><div class="val" style="color:${saved>=0?"#7c3aed":"#E8930A"}">${fmt(saved)}</div></div></div>
 <h2>💰 Entradas</h2><table><thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>${incRows||"<tr><td colspan=5>Nenhuma entrada</td></tr>"}</tbody></table>
 <h2>💸 Gastos</h2><table><thead><tr><th>Data</th><th>Descrição</th><th>Pessoa</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>${expRows||"<tr><td colspan=5>Nenhum gasto</td></tr>"}</tbody></table>
 <h2>🏷️ Por categoria</h2><table><thead><tr><th>Categoria</th><th>Valor</th><th>%</th></tr></thead><tbody>${rows||"<tr><td colspan=3>Sem dados</td></tr>"}</tbody></table>
@@ -1260,26 +1260,26 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
       </div>
       <div style={{...S.card,marginBottom:12,padding:"10px 14px"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
-          <div><div style={{fontWeight:800,fontSize:14,color:"#00FF88"}}>{fmt(totalIn)}</div><div style={{fontSize:10,color:"#475569"}}>Entradas</div></div>
-          <div><div style={{fontWeight:800,fontSize:14,color:"#FF3D7F"}}>{fmt(totalOut)}</div><div style={{fontSize:10,color:"#475569"}}>Gastos</div></div>
-          <div><div style={{fontWeight:800,fontSize:14,color:balance>=0?"#FFD60A":"#FF3D7F"}}>{fmt(balance)}</div><div style={{fontSize:10,color:"#475569"}}>Saldo</div></div>
+          <div><div style={{fontWeight:800,fontSize:14,color:"#00B86B"}}>{fmt(totalIn)}</div><div style={{fontSize:10,color:"#9AA1B2"}}>Entradas</div></div>
+          <div><div style={{fontWeight:800,fontSize:14,color:"#FF3D7F"}}>{fmt(totalOut)}</div><div style={{fontSize:10,color:"#9AA1B2"}}>Gastos</div></div>
+          <div><div style={{fontWeight:800,fontSize:14,color:balance>=0?"#E8930A":"#FF3D7F"}}>{fmt(balance)}</div><div style={{fontSize:10,color:"#9AA1B2"}}>Saldo</div></div>
         </div>
       </div>
       {all.length===0 && <p style={S.empty}>Nenhum lançamento este mês</p>}
       {all.map(item=>{
-        const cat=categories.find(c=>c.id===item.category)||{icon:item.kind==="income"?"💰":"📦",color:item.kind==="income"?"#00FF88":"#94a3b8",label:prettyCat(item.category)};
+        const cat=categories.find(c=>c.id===item.category)||{icon:item.kind==="income"?"💰":"📦",color:item.kind==="income"?"#00B86B":"#8A91A3",label:prettyCat(item.category)};
         const isIn=item.kind==="income";
         return(
           <div key={item.id} style={S.listItem}>
             <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
             <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#e2e8f0",display:"flex",alignItems:"center",gap:6}}>
+              <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A",display:"flex",alignItems:"center",gap:6}}>
                 {item.description}
-                <span style={{fontSize:9,background:isIn?"#00FF8822":"#FF3D7F22",color:isIn?"#00FF88":"#FF3D7F",borderRadius:4,padding:"2px 6px",fontWeight:700}}>{isIn?"ENTRADA":"GASTO"}</span>
+                <span style={{fontSize:9,background:isIn?"#00FF8822":"#FF3D7F22",color:isIn?"#00B86B":"#FF3D7F",borderRadius:4,padding:"2px 6px",fontWeight:700}}>{isIn?"ENTRADA":"GASTO"}</span>
               </div>
-              <div style={{fontSize:11,color:"#475569"}}>{item.date} · {item.userName||"—"} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              <div style={{fontSize:11,color:"#9AA1B2"}}>{item.date} · {item.userName||"—"} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
-            <div style={{fontWeight:800,fontSize:13,color:isIn?"#00FF88":"#FF3D7F"}}>{isIn?"+":"-"}{fmt(item.amount)}</div>
+            <div style={{fontWeight:800,fontSize:13,color:isIn?"#00B86B":"#FF3D7F"}}>{isIn?"+":"-"}{fmt(item.amount)}</div>
           </div>
         );
       })}
@@ -1307,16 +1307,16 @@ function Comparativo({histData,month}){
         const pctIn=Math.round((d.totalIn/maxVal)*100);
         const pctOut=Math.round((d.totalOut/maxVal)*100);
         return(
-          <div key={d.month} style={{...S.card,marginBottom:10,borderLeft:isCurrent?"3px solid #00FF88":"3px solid #1e2035"}}>
+          <div key={d.month} style={{...S.card,marginBottom:10,borderLeft:isCurrent?"3px solid #00B86B":"3px solid #EEF0F4"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <span style={{fontWeight:800,fontSize:14,color:isCurrent?"#00FF88":"#e2e8f0"}}>{MONTHS[m2-1]} {y2}{isCurrent?" ← atual":""}</span>
-              <span style={{fontSize:13,fontWeight:800,color:d.balance>=0?"#00FF88":"#FF3D7F"}}>{fmt(d.balance)}</span>
+              <span style={{fontWeight:800,fontSize:14,color:isCurrent?"#00B86B":"#0D0D1A"}}>{MONTHS[m2-1]} {y2}{isCurrent?" ← atual":""}</span>
+              <span style={{fontSize:13,fontWeight:800,color:d.balance>=0?"#00B86B":"#FF3D7F"}}>{fmt(d.balance)}</span>
             </div>
             <div style={{marginBottom:6}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}>
-                <span style={{color:"#00FF88"}}>💰 {fmt(d.totalIn)}</span>
+                <span style={{color:"#00B86B"}}>💰 {fmt(d.totalIn)}</span>
               </div>
-              <ProgressBar pct={pctIn} color="#00FF88"/>
+              <ProgressBar pct={pctIn} color="#00B86B"/>
             </div>
             <div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}>
@@ -1339,7 +1339,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
   const [editItem,setEditItem]=useState(null);
   const [label,setLabel]=useState("");
   const [icon,setIcon]=useState("📌");
-  const [color,setColor]=useState("#6366f1");
+  const [color,setColor]=useState("#3B7BFF");
   const [type,setType]=useState("expense");
 
   const openEdit=(cat)=>{ setEditItem(cat);setLabel(cat.label);setIcon(cat.icon);setColor(cat.color);setType(cat.type);setForm("edit"); };
@@ -1348,7 +1348,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
     const id=editItem?editItem.id:(label.toLowerCase().replace(/\s+/g,"_")+Date.now());
     const cat={id,label,icon,color,type};
     if(editItem) onEdit(cat); else onAdd(cat);
-    setForm(null);setLabel("");setIcon("📌");setColor("#6366f1");setType("expense");setEditItem(null);
+    setForm(null);setLabel("");setIcon("📌");setColor("#3B7BFF");setType("expense");setEditItem(null);
   };
   const expMap={},incMap={};
   expenses.forEach(e=>{ expMap[e.category]=(expMap[e.category]||0)+Number(e.amount); });
@@ -1358,13 +1358,13 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
     <div style={{paddingBottom:80}}>
       <div style={S.secHeader}>
         <h2 style={S.secTitle}>🏷️ Categorias</h2>
-        <button style={S.btnPrimary} onClick={()=>{setForm("new");setEditItem(null);setLabel("");setIcon("📌");setColor("#6366f1");setType("expense");}}>+ Nova</button>
+        <button style={S.btnPrimary} onClick={()=>{setForm("new");setEditItem(null);setLabel("");setIcon("📌");setColor("#3B7BFF");setType("expense");}}>+ Nova</button>
       </div>
       {form && (
         <div style={{...S.card,marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <span style={{fontWeight:700,color:"#e2e8f0"}}>{form==="edit"?"Editar":"Nova"} categoria</span>
-            <button style={{background:"none",border:"none",color:"#6b7280",cursor:"pointer",fontSize:18}} onClick={()=>setForm(null)}>✕</button>
+            <span style={{fontWeight:700,color:"#0D0D1A"}}>{form==="edit"?"Editar":"Nova"} categoria</span>
+            <button style={{background:"none",border:"none",color:"#8A91A3",cursor:"pointer",fontSize:18}} onClick={()=>setForm(null)}>✕</button>
           </div>
           <div style={{display:"flex",gap:8,marginBottom:10}}>
             <input style={{...S.input,flex:"0 0 55px",textAlign:"center",fontSize:22,padding:"6px"}} value={icon} onChange={e=>setIcon(e.target.value)}/>
@@ -1374,7 +1374,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
           <div style={{display:"flex",gap:8,marginBottom:12}}>
             {[{v:"income",l:"💰 Entrada"},{v:"expense",l:"💸 Gasto"},{v:"both",l:"↕️ Ambos"}].map(o=>(
               <button key={o.v} onClick={()=>setType(o.v)}
-                style={{flex:1,padding:"8px",borderRadius:8,border:`2px solid ${type===o.v?"#00FF88":"#1e2035"}`,background:type===o.v?"#00FF8822":"#0D0D1A",color:"#e2e8f0",cursor:"pointer",fontWeight:600,fontSize:12}}>
+                style={{flex:1,padding:"8px",borderRadius:8,border:`2px solid ${type===o.v?"#00B86B":"#EEF0F4"}`,background:type===o.v?"#00FF8822":"#0D0D1A",color:"#0D0D1A",cursor:"pointer",fontWeight:600,fontSize:12}}>
                 {o.l}
               </button>
             ))}
@@ -1391,14 +1391,14 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                 <span style={{fontSize:22}}>{cat.icon}</span>
                 <div style={{flex:1}}>
-                  <div style={{fontWeight:700,fontSize:12,color:"#e2e8f0"}}>{cat.label}</div>
-                  <div style={{fontSize:10,color:"#475569",marginTop:2}}>{cat.type==="income"?"ENTRADA":cat.type==="expense"?"GASTO":"AMBOS"}</div>
+                  <div style={{fontWeight:700,fontSize:12,color:"#0D0D1A"}}>{cat.label}</div>
+                  <div style={{fontSize:10,color:"#9AA1B2",marginTop:2}}>{cat.type==="income"?"ENTRADA":cat.type==="expense"?"GASTO":"AMBOS"}</div>
                 </div>
                 <button style={{...S.btnIcon,fontSize:13}} onClick={()=>openEdit(cat)}>✏️</button>
               </div>
-              {earned>0&&<div style={{fontSize:11,color:"#00FF88",fontWeight:600}}>+{fmt(earned)}</div>}
+              {earned>0&&<div style={{fontSize:11,color:"#00B86B",fontWeight:600}}>+{fmt(earned)}</div>}
               {spent>0&&<div style={{fontSize:11,color:"#FF3D7F",fontWeight:600}}>-{fmt(spent)}</div>}
-              {spent===0&&earned===0&&<div style={{fontSize:10,color:"#334155"}}>Sem movimentação</div>}
+              {spent===0&&earned===0&&<div style={{fontSize:10,color:"#9AA1B2"}}>Sem movimentação</div>}
             </div>
           );
         })}
@@ -1470,14 +1470,14 @@ function OpenFinanceCard({accountData,user,fb,onUpgrade}){
     <div style={{...S.card,marginBottom:14,border:"1px solid #00FF8833"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
         <div>
-          <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>🏦 Conectar meu banco</div>
-          <div style={{fontSize:11,color:"#475569",marginTop:2,lineHeight:1.4}}>Open Finance: importa seus gastos automaticamente.{!OPEN_FINANCE_ATIVO?" Chega já já 🔜":(isPago?"":" Exclusivo dos planos Pro.")}</div>
+          <div style={{fontWeight:700,fontSize:14,color:"#0D0D1A"}}>🏦 Conectar meu banco</div>
+          <div style={{fontSize:11,color:"#9AA1B2",marginTop:2,lineHeight:1.4}}>Open Finance: importa seus gastos automaticamente.{!OPEN_FINANCE_ATIVO?" Chega já já 🔜":(isPago?"":" Exclusivo dos planos Pro.")}</div>
         </div>
-        <button disabled={busy||!OPEN_FINANCE_ATIVO} onClick={conectar} style={{background:!OPEN_FINANCE_ATIVO?"#1e2035":(isPago?"linear-gradient(135deg,#00FF88,#00c46a)":"#1e2035"),color:!OPEN_FINANCE_ATIVO?"#6b7280":(isPago?"#04120a":"#94a3b8"),border:!OPEN_FINANCE_ATIVO?"1px solid #2a2d4a":(isPago?"none":"1px solid #2a2d4a"),borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,cursor:(busy||!OPEN_FINANCE_ATIVO)?"default":"pointer",whiteSpace:"nowrap"}}>
+        <button disabled={busy||!OPEN_FINANCE_ATIVO} onClick={conectar} style={{background:!OPEN_FINANCE_ATIVO?"#EEF0F4":(isPago?"#00B86B":"#EEF0F4"),color:!OPEN_FINANCE_ATIVO?"#8A91A3":(isPago?"#04120a":"#8A91A3"),border:!OPEN_FINANCE_ATIVO?"1px solid #E7E9F0":(isPago?"none":"1px solid #E7E9F0"),borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,cursor:(busy||!OPEN_FINANCE_ATIVO)?"default":"pointer",whiteSpace:"nowrap"}}>
           {!OPEN_FINANCE_ATIVO?"Em breve 🔜":busy?"Conectando…":isPago?"Conectar 🔗":"Virar Pro ⚡"}
         </button>
       </div>
-      {status && <div style={{marginTop:10,fontSize:12,color:status.type==="error"?"#FF3D7F":status.type==="success"?"#00FF88":"#94a3b8"}}>{status.msg}</div>}
+      {status && <div style={{marginTop:10,fontSize:12,color:status.type==="error"?"#FF3D7F":status.type==="success"?"#00B86B":"#8A91A3"}}>{status.msg}</div>}
     </div>
   );
 }
@@ -1509,22 +1509,22 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
       <h2 style={{...S.secTitle,marginBottom:14}}>👤 Meu Perfil</h2>
 
       {isAdmin && onTab && (
-        <button onClick={()=>onTab("affiliates")} style={{...S.card,width:"100%",textAlign:"left",cursor:"pointer",marginBottom:14,border:"1px solid #00FF8844",display:"flex",justifyContent:"space-between",alignItems:"center",background:"linear-gradient(135deg,rgba(0,255,136,.06),rgba(255,214,10,.04))"}}>
-          <span style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>🎯 Programa de Afiliados</span>
-          <span style={{color:"#00FF88",fontWeight:800}}>abrir →</span>
+        <button onClick={()=>onTab("affiliates")} style={{...S.card,width:"100%",textAlign:"left",cursor:"pointer",marginBottom:14,border:"1px solid #00FF8844",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#E7F8EF)"}}>
+          <span style={{fontWeight:700,fontSize:14,color:"#0D0D1A"}}>🎯 Programa de Afiliados</span>
+          <span style={{color:"#00B86B",fontWeight:800}}>abrir →</span>
         </button>
       )}
 
       {/* Plano */}
-      <div style={{...S.card,marginBottom:14,background:"linear-gradient(135deg,#1a1a2e,#16213e)",border:"1px solid #00FF8833"}}>
+      <div style={{...S.card,marginBottom:14,background:"#FFFFFF",border:"1px solid #00FF8833"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
-            <div style={{fontSize:11,color:"#6b7280"}}>plano atual</div>
-            <div style={{fontWeight:800,fontSize:16,color:"#00FF88",marginTop:2}}>{plan.name}</div>
-            <div style={{fontSize:11,color:"#475569",marginTop:2}}>{plan.limit===Infinity?"lançamentos ilimitados":`${plan.limit} lançamentos/mês`}</div>
+            <div style={{fontSize:11,color:"#8A91A3"}}>plano atual</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#00B86B",marginTop:2}}>{plan.name}</div>
+            <div style={{fontSize:11,color:"#9AA1B2",marginTop:2}}>{plan.limit===Infinity?"lançamentos ilimitados":`${plan.limit} lançamentos/mês`}</div>
           </div>
           {accountData?.plan==="explorador" && (
-            <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>
+            <button style={{background:"#00B86B",border:"none",borderRadius:10,padding:"10px 16px",fontWeight:800,fontSize:13,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>
               Fazer upgrade ⚡
             </button>
           )}
@@ -1536,10 +1536,10 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
 
       {/* Dados pessoais */}
       <div style={S.card}>
-        <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:12}}>✏️ Dados pessoais</div>
+        <div style={{fontWeight:700,fontSize:13,color:"#0D0D1A",marginBottom:12}}>✏️ Dados pessoais</div>
         <div style={S.fg}><label style={S.label}>Como você quer ser chamado</label>
           <input style={S.input} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex: Yuri"/>
-          <div style={{fontSize:10,color:"#475569",marginTop:3}}>É esse nome que aparece no “olá 👋” lá em cima</div>
+          <div style={{fontSize:10,color:"#9AA1B2",marginTop:3}}>É esse nome que aparece no “olá 👋” lá em cima</div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <div style={{...S.fg,flex:2}}><label style={S.label}>Cidade</label>
@@ -1556,13 +1556,13 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
 
       {/* Membros da conta */}
       <div style={{...S.card,marginTop:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"#e2e8f0",marginBottom:4}}>👥 Membros da conta</div>
-        <div style={{fontSize:11,color:"#475569",marginBottom:12}}>Adicione o e-mail de quem vai usar a mesma conta (ex: cônjuge).</div>
+        <div style={{fontWeight:700,fontSize:13,color:"#0D0D1A",marginBottom:4}}>👥 Membros da conta</div>
+        <div style={{fontSize:11,color:"#9AA1B2",marginBottom:12}}>Adicione o e-mail de quem vai usar a mesma conta (ex: cônjuge).</div>
         {members.map(email=>(
-          <div key={email} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1e2035"}}>
+          <div key={email} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #EEF0F4"}}>
             <div>
-              <div style={{fontSize:13,color:"#e2e8f0"}}>{email}</div>
-              {email===accountData?.ownerEmail&&<div style={{fontSize:10,color:"#00FF88"}}>titular</div>}
+              <div style={{fontSize:13,color:"#0D0D1A"}}>{email}</div>
+              {email===accountData?.ownerEmail&&<div style={{fontSize:10,color:"#00B86B"}}>titular</div>}
             </div>
             {email!==accountData?.ownerEmail&&(
               <button style={{...S.btnIcon,color:"#FF3D7F"}} onClick={()=>removeMember(email)}>✕</button>
@@ -1573,8 +1573,8 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
           <input style={{...S.input,flex:1}} value={newMember} onChange={e=>setNewMember(e.target.value)} placeholder="email@exemplo.com"/>
           <button style={{...S.btnPrimary,width:"auto",padding:"0 16px"}} onClick={addMember}>Adicionar</button>
         </div>
-        <div style={{background:"#12182b",borderRadius:10,padding:"10px 12px",marginTop:12,fontSize:11,color:"#94a3b8",lineHeight:1.5}}>
-          🔑 <b style={{color:"#cbd5e1"}}>Como a pessoa acessa:</b> depois de adicionada aqui, ela abre o app, clica em <b>“Criar conta grátis”</b> usando <b>esse mesmo e-mail</b> e escolhe a <b>senha dela</b>. Pronto — ela cai direto nesta conta compartilhada e vê os mesmos lançamentos. Cada um tem a própria senha; você não precisa saber a senha dela.
+        <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:10,padding:"10px 12px",marginTop:12,fontSize:11,color:"#8A91A3",lineHeight:1.5}}>
+          🔑 <b style={{color:"#8A91A3"}}>Como a pessoa acessa:</b> depois de adicionada aqui, ela abre o app, clica em <b>“Criar conta grátis”</b> usando <b>esse mesmo e-mail</b> e escolhe a <b>senha dela</b>. Pronto — ela cai direto nesta conta compartilhada e vê os mesmos lançamentos. Cada um tem a própria senha; você não precisa saber a senha dela.
         </div>
       </div>
     </div>
@@ -1643,16 +1643,16 @@ function Affiliates({ fb, isDesktop, showToast }){
   return (
     <div style={{paddingBottom:80}}>
       <h2 style={{...S.secTitle,marginBottom:6}}>🎯 Programa de Afiliados</h2>
-      <p style={{fontSize:13,color:"#6b7280",marginBottom:16}}>Crie um código pra cada influenciador. Quem se cadastrar com o código conta como indicação dele. Você paga a comissão manualmente todo mês, com base nos indicados que estão pagando.</p>
+      <p style={{fontSize:13,color:"#8A91A3",marginBottom:16}}>Crie um código pra cada influenciador. Quem se cadastrar com o código conta como indicação dele. Você paga a comissão manualmente todo mês, com base nos indicados que estão pagando.</p>
 
       <div style={{display:"grid",gridTemplateColumns:isDesktop?"1fr 1fr 1fr":"1fr 1fr",gap:12,marginBottom:16}}>
-        <div style={S.card}><div style={{fontSize:11,color:"#6b7280"}}>Afiliados</div><div style={{fontWeight:900,fontSize:22,color:"#00FF88"}}>{affs.length}</div></div>
-        <div style={S.card}><div style={{fontSize:11,color:"#6b7280"}}>Indicados pagando</div><div style={{fontWeight:900,fontSize:22,color:"#FFD60A"}}>{totalPaying}</div></div>
-        <div style={S.card}><div style={{fontSize:11,color:"#6b7280"}}>A pagar/mês</div><div style={{fontWeight:900,fontSize:22,color:"#FF3D7F"}}>{fmt(totalOwed)}</div></div>
+        <div style={S.card}><div style={{fontSize:11,color:"#8A91A3"}}>Afiliados</div><div style={{fontWeight:900,fontSize:22,color:"#00B86B"}}>{affs.length}</div></div>
+        <div style={S.card}><div style={{fontSize:11,color:"#8A91A3"}}>Indicados pagando</div><div style={{fontWeight:900,fontSize:22,color:"#E8930A"}}>{totalPaying}</div></div>
+        <div style={S.card}><div style={{fontSize:11,color:"#8A91A3"}}>A pagar/mês</div><div style={{fontWeight:900,fontSize:22,color:"#FF3D7F"}}>{fmt(totalOwed)}</div></div>
       </div>
 
       <div style={{...S.card,marginBottom:16}}>
-        <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0",marginBottom:12}}>➕ Novo afiliado</div>
+        <div style={{fontWeight:700,fontSize:14,color:"#0D0D1A",marginBottom:12}}>➕ Novo afiliado</div>
         <div style={{display:"grid",gridTemplateColumns:isDesktop?"1fr 1fr":"1fr",gap:10}}>
           <div style={S.fg}><label style={S.label}>Nome do influenciador</label>
             <input style={S.input} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex: Maria Souza"/></div>
@@ -1676,20 +1676,20 @@ function Affiliates({ fb, isDesktop, showToast }){
           <div key={aff.id} style={{...S.card,marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
               <div>
-                <div style={{fontWeight:800,fontSize:15,color:"#e2e8f0"}}>{aff.name} {aff.instagram&&<span style={{color:"#6b7280",fontWeight:500,fontSize:12}}>{aff.instagram}</span>}</div>
-                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Código: <b style={{color:"#00FF88"}}>{aff.code}</b> · Comissão: <b>{aff.commissionPct}%</b></div>
+                <div style={{fontWeight:800,fontSize:15,color:"#0D0D1A"}}>{aff.name} {aff.instagram&&<span style={{color:"#8A91A3",fontWeight:500,fontSize:12}}>{aff.instagram}</span>}</div>
+                <div style={{fontSize:12,color:"#8A91A3",marginTop:2}}>Código: <b style={{color:"#00B86B"}}>{aff.code}</b> · Comissão: <b>{aff.commissionPct}%</b></div>
               </div>
               <div style={{textAlign:"right"}}>
                 <div style={{fontWeight:900,fontSize:18,color:"#FF3D7F"}}>{fmt(st.monthly)}</div>
-                <div style={{fontSize:11,color:"#475569"}}>a pagar/mês</div>
+                <div style={{fontSize:11,color:"#9AA1B2"}}>a pagar/mês</div>
               </div>
             </div>
-            <div style={{display:"flex",gap:16,marginTop:10,fontSize:12,color:"#94a3b8"}}>
+            <div style={{display:"flex",gap:16,marginTop:10,fontSize:12,color:"#8A91A3"}}>
               <span>👥 {st.ref} indicados</span>
               <span>💳 {st.paying} pagando</span>
             </div>
             <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
-              <input readOnly value={link} style={{...S.input,flex:1,fontSize:12,color:"#94a3b8"}}/>
+              <input readOnly value={link} style={{...S.input,flex:1,fontSize:12,color:"#8A91A3"}}/>
               <button style={{...S.btnSm,padding:"8px 12px",whiteSpace:"nowrap"}} onClick={()=>{ try{navigator.clipboard.writeText(link); showToast("Link copiado ✅");}catch(e){} }}>copiar link</button>
             </div>
           </div>
@@ -1748,7 +1748,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
       originalPrice: null,
       period: "/mês",
       features: ["Lançamentos ilimitados", "Até 4 pessoas na conta", "Comparativo de meses", "Relatório PDF", "Suporte prioritário"],
-      color: "#00FF88",
+      color: "#00B86B",
       featured: false,
     },
     {
@@ -1760,7 +1760,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
       period: "/ano",
       sub: "equivale a R$9,90/mês",
       features: ["Tudo do Pro Mensal", "Histórico completo", "Economize 50%", "Prioridade máxima"],
-      color: "#FFD60A",
+      color: "#E8930A",
       featured: true,
     },
   ];
@@ -1768,23 +1768,23 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
       onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div style={{background:"#111827",borderRadius:"20px 20px 0 0",padding:24,width:"100%",maxWidth:500,maxHeight:"92vh",overflowY:"auto",border:"1px solid #1e2035"}}>
+      <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:"20px 20px 0 0",padding:24,width:"100%",maxWidth:500,maxHeight:"92vh",overflowY:"auto",border:"1px solid #EEF0F4"}}>
 
         {/* Header */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div>
-            <div style={{fontWeight:900,fontSize:20,color:"#e2e8f0"}}>⚡ Fazer upgrade</div>
-            <div style={{fontSize:12,color:"#6b7280",marginTop:2}}>Desbloqueie tudo no iGastei</div>
+            <div style={{fontWeight:900,fontSize:20,color:"#0D0D1A"}}>⚡ Fazer upgrade</div>
+            <div style={{fontSize:12,color:"#8A91A3",marginTop:2}}>Desbloqueie tudo no iGastei</div>
           </div>
-          <button style={{background:"none",border:"none",color:"#6b7280",fontSize:22,cursor:"pointer"}} onClick={onClose}>✕</button>
+          <button style={{background:"none",border:"none",color:"#8A91A3",fontSize:22,cursor:"pointer"}} onClick={onClose}>✕</button>
         </div>
 
         {/* Gerenciar assinatura (se já for pro) */}
         {currentPlan !== "explorador" && currentPlan !== "influencer" && (
           <div style={{background:"#00FF8815",border:"1px solid #00FF8833",borderRadius:12,padding:14,marginBottom:16}}>
-            <div style={{fontSize:13,color:"#00FF88",fontWeight:700,marginBottom:4}}>✅ Você já tem o plano {currentPlan === "pro_mensal" ? "Pro Mensal" : "Pro Anual"}</div>
-            <div style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Gerencie sua assinatura, veja faturas ou cancele quando quiser.</div>
-            <button style={{background:"#1e2035",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"10px 16px",cursor:"pointer",fontWeight:700,fontSize:13,width:"100%"}}
+            <div style={{fontSize:13,color:"#00B86B",fontWeight:700,marginBottom:4}}>✅ Você já tem o plano {currentPlan === "pro_mensal" ? "Pro Mensal" : "Pro Anual"}</div>
+            <div style={{fontSize:12,color:"#8A91A3",marginBottom:10}}>Gerencie sua assinatura, veja faturas ou cancele quando quiser.</div>
+            <button style={{background:"#EEF0F4",border:"1px solid #9AA1B2",color:"#0D0D1A",borderRadius:10,padding:"10px 16px",cursor:"pointer",fontWeight:700,fontSize:13,width:"100%"}}
               onClick={manageSubscription}>
               Gerenciar assinatura →
             </button>
@@ -1795,32 +1795,32 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
         {(currentPlan === "explorador" || currentPlan === "influencer") && (
           <>
             {plans.map(p => (
-              <div key={p.id} style={{background:"#0D0D1A",border:`2px solid ${p.featured ? p.color+"44" : "#1e2035"}`,borderRadius:14,padding:16,marginBottom:12,position:"relative"}}>
+              <div key={p.id} style={{background:"#ECEEF2",border:`2px solid ${p.featured ? p.color+"44" : "#EEF0F4"}`,borderRadius:14,padding:16,marginBottom:12,position:"relative"}}>
                 {p.featured && (
-                  <div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:`linear-gradient(135deg,${p.color},#00FF88)`,color:"#0D0D1A",borderRadius:20,padding:"3px 14px",fontSize:10,fontWeight:900,whiteSpace:"nowrap"}}>
+                  <div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:`${p.color}`,color:"#0D0D1A",borderRadius:20,padding:"3px 14px",fontSize:10,fontWeight:900,whiteSpace:"nowrap"}}>
                     ⭐ Mais econômico
                   </div>
                 )}
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
                   <div>
-                    <div style={{fontWeight:800,fontSize:15,color:"#e2e8f0"}}>{p.icon} {p.name}</div>
-                    {p.sub && <div style={{fontSize:10,color:"#6b7280",marginTop:2}}>{p.sub}</div>}
+                    <div style={{fontWeight:800,fontSize:15,color:"#0D0D1A"}}>{p.icon} {p.name}</div>
+                    {p.sub && <div style={{fontSize:10,color:"#8A91A3",marginTop:2}}>{p.sub}</div>}
                   </div>
                   <div style={{textAlign:"right"}}>
-                    {p.originalPrice && <div style={{fontSize:11,color:"#475569",textDecoration:"line-through"}}>R${p.originalPrice}</div>}
+                    {p.originalPrice && <div style={{fontSize:11,color:"#9AA1B2",textDecoration:"line-through"}}>R${p.originalPrice}</div>}
                     <div style={{fontWeight:900,fontSize:22,color:p.color}}>R${p.price}</div>
-                    <div style={{fontSize:10,color:"#6b7280"}}>{p.period}</div>
+                    <div style={{fontSize:10,color:"#8A91A3"}}>{p.period}</div>
                   </div>
                 </div>
                 <div style={{marginBottom:14}}>
                   {p.features.map(f => (
-                    <div key={f} style={{fontSize:12,color:"#94a3b8",padding:"4px 0",display:"flex",gap:8,alignItems:"center"}}>
+                    <div key={f} style={{fontSize:12,color:"#8A91A3",padding:"4px 0",display:"flex",gap:8,alignItems:"center"}}>
                       <span style={{color:p.color,fontWeight:700}}>✓</span> {f}
                     </div>
                   ))}
                 </div>
                 <button
-                  style={{width:"100%",background:`linear-gradient(135deg,${p.color},${p.featured?"#00FF88":"#FFD60A"})`,border:"none",borderRadius:12,padding:"13px",fontWeight:900,fontSize:14,color:"#0D0D1A",cursor:"pointer",opacity:loading?0.7:1}}
+                  style={{width:"100%",background:`${p.color}`,border:"none",borderRadius:12,padding:"13px",fontWeight:900,fontSize:14,color:"#0D0D1A",cursor:"pointer",opacity:loading?0.7:1}}
                   onClick={()=>checkout(p.id)}
                   disabled={!!loading}>
                   {loading===p.id ? "Abrindo checkout..." : `Assinar ${p.name} →`}
@@ -1833,7 +1833,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
         {/* Segurança */}
         <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:16,flexWrap:"wrap"}}>
           {["🔒 Pagamento seguro","↩️ Cancele quando quiser","🇧🇷 Suporte em português"].map(t=>(
-            <div key={t} style={{fontSize:10,color:"#475569"}}>{t}</div>
+            <div key={t} style={{fontSize:10,color:"#9AA1B2"}}>{t}</div>
           ))}
         </div>
       </div>
@@ -1847,11 +1847,11 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
 function UpgradeSuccess({ onClose }) {
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-      <div style={{background:"#111827",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",border:"1px solid #00FF8833"}}>
+      <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",border:"1px solid #00FF8833"}}>
         <div style={{fontSize:60,marginBottom:16}}>🎉</div>
-        <div style={{fontWeight:900,fontSize:22,color:"#00FF88",marginBottom:8}}>Bem-vindo ao Pro!</div>
-        <div style={{fontSize:14,color:"#6b7280",marginBottom:24,lineHeight:1.6}}>Seu plano foi ativado. Agora você tem acesso completo ao iGastei sem limites!</div>
-        <button style={{background:"linear-gradient(135deg,#00FF88,#FFD60A)",border:"none",borderRadius:12,padding:"13px 24px",fontWeight:900,fontSize:14,color:"#0D0D1A",cursor:"pointer",width:"100%"}} onClick={onClose}>
+        <div style={{fontWeight:900,fontSize:22,color:"#00B86B",marginBottom:8}}>Bem-vindo ao Pro!</div>
+        <div style={{fontSize:14,color:"#8A91A3",marginBottom:24,lineHeight:1.6}}>Seu plano foi ativado. Agora você tem acesso completo ao iGastei sem limites!</div>
+        <button style={{background:"#00B86B",border:"none",borderRadius:12,padding:"13px 24px",fontWeight:900,fontSize:14,color:"#0D0D1A",cursor:"pointer",width:"100%"}} onClick={onClose}>
           Usar o iGastei →
         </button>
       </div>
@@ -1864,44 +1864,43 @@ function UpgradeSuccess({ onClose }) {
 // STYLES
 // ============================================================
 const S={
-  root:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Nunito',system-ui,sans-serif",paddingBottom:90},
-  // --- DESKTOP ---
-  rootDesktop:{minHeight:"100vh",background:"#0D0D1A",color:"#e2e8f0",fontFamily:"'Nunito',system-ui,sans-serif",display:"flex"},
-  sidebar:{width:250,flexShrink:0,background:"#0a0d17",borderRight:"1px solid #1e2035",display:"flex",flexDirection:"column",position:"sticky",top:0,height:"100vh"},
-  sideItem:{display:"flex",alignItems:"center",gap:12,width:"100%",background:"none",border:"none",color:"#8b94ad",padding:"11px 14px",borderRadius:10,cursor:"pointer",fontSize:14.5,fontWeight:600,textAlign:"left",fontFamily:"inherit",transition:"background .15s,color .15s"},
-  sideItemOn:{background:"#00FF8814",color:"#00FF88",fontWeight:800},
+  root:{minHeight:"100vh",background:"#ECEEF2",color:"#0D0D1A",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:94},
+  rootDesktop:{minHeight:"100vh",background:"#ECEEF2",color:"#0D0D1A",fontFamily:"'Inter',system-ui,sans-serif",display:"flex"},
+  sidebar:{width:250,flexShrink:0,background:"#FFFFFF",borderRight:"1px solid #E7E9F0",display:"flex",flexDirection:"column",position:"sticky",top:0,height:"100vh"},
+  sideItem:{display:"flex",alignItems:"center",gap:12,width:"100%",background:"none",border:"none",color:"#555c6b",padding:"12px 14px",borderRadius:12,cursor:"pointer",fontSize:14.5,fontWeight:700,textAlign:"left",fontFamily:"inherit",transition:"background .15s,color .15s"},
+  sideItemOn:{background:"#E7F8EF",color:"#047A46",fontWeight:800},
   dMain:{flex:1,minWidth:0,display:"flex",flexDirection:"column"},
-  topbar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 34px",borderBottom:"1px solid #1e2035",position:"sticky",top:0,background:"rgba(13,13,26,.85)",backdropFilter:"blur(10px)",zIndex:10},
+  topbar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 34px",borderBottom:"1px solid #E7E9F0",position:"sticky",top:0,background:"#ECEEF2",zIndex:10},
   dContent:{padding:"26px 34px 60px",maxWidth:1160,width:"100%",margin:"0 auto"},
-  header:{background:"#0D0D1A",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #1e2035",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(10px)"},
-  avatar:{width:44,height:44,background:"#00FF88",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#04120a",flexShrink:0},
-  monthSel:{display:"flex",alignItems:"center",gap:2,background:"#14172E",borderRadius:12,padding:"3px 4px"},
-  monthBtn:{background:"transparent",border:"none",color:"#c7cde0",borderRadius:9,width:34,height:34,cursor:"pointer",fontSize:18,fontWeight:900},
-  btnLogout:{background:"transparent",border:"1px solid #2a2f52",color:"#8b94ad",borderRadius:10,padding:"9px 12px",cursor:"pointer",fontSize:12.5,fontWeight:800},
-  toast:{position:"fixed",top:14,left:"50%",transform:"translateX(-50%)",padding:"10px 20px",borderRadius:10,fontWeight:700,zIndex:999,fontSize:13,whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,.5)"},
-  loginRoot:{minHeight:"100vh",background:"#0D0D1A",display:"flex",alignItems:"center",justifyContent:"center",padding:16},
-  loginCard:{background:"#111827",borderRadius:20,padding:28,width:"100%",maxWidth:380,border:"1px solid #1e2035",boxShadow:"0 20px 60px rgba(0,0,0,.5)"},
-  main:{padding:"14px 16px",maxWidth:500,margin:"0 auto"},
-  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#0f1322",borderTop:"1px solid #1a1f38",display:"flex",alignItems:"center",zIndex:10,height:68,padding:"0 8px"},
-  bottomNavBtn:{flex:1,background:"none",border:"none",color:"#475569",padding:"8px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1},
-  bottomNavBtnOn:{color:"#00FF88"},
-  bottomNavCenter:{width:56,height:56,background:"#00FF88",border:"none",borderRadius:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#04120a",flexShrink:0,margin:"0 8px"},
+  header:{background:"#ECEEF2",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:10},
+  avatar:{width:44,height:44,background:"#00B86B",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#fff",flexShrink:0},
+  monthSel:{display:"flex",alignItems:"center",gap:2,background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:12,padding:"3px 4px"},
+  monthBtn:{background:"transparent",border:"none",color:"#555c6b",borderRadius:9,width:34,height:34,cursor:"pointer",fontSize:18,fontWeight:900},
+  btnLogout:{background:"#FFFFFF",border:"1px solid #E7E9F0",color:"#8A91A3",borderRadius:10,padding:"9px 12px",cursor:"pointer",fontSize:12.5,fontWeight:800},
+  toast:{position:"fixed",top:14,left:"50%",transform:"translateX(-50%)",padding:"12px 20px",borderRadius:12,fontWeight:800,zIndex:999,fontSize:13,whiteSpace:"nowrap",boxShadow:"0 10px 34px rgba(13,13,26,.18)"},
+  loginRoot:{minHeight:"100vh",background:"#ECEEF2",display:"flex",alignItems:"center",justifyContent:"center",padding:16},
+  loginCard:{background:"#FFFFFF",borderRadius:24,padding:28,width:"100%",maxWidth:380,border:"1px solid #E7E9F0",boxShadow:"0 30px 60px rgba(13,13,26,.08)"},
+  main:{padding:"8px 16px 16px",maxWidth:520,margin:"0 auto"},
+  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#FFFFFF",borderTop:"1px solid #E7E9F0",display:"flex",alignItems:"center",zIndex:10,height:72,padding:"0 8px"},
+  bottomNavBtn:{flex:1,background:"none",border:"none",color:"#8A91A3",padding:"8px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontWeight:800},
+  bottomNavBtnOn:{color:"#0D0D1A"},
+  bottomNavCenter:{width:54,height:54,background:"#00B86B",border:"none",borderRadius:17,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",flexShrink:0,margin:"0 8px"},
   fg:{marginBottom:12},
-  label:{display:"block",fontSize:11,color:"#6b7280",marginBottom:4,fontWeight:700,letterSpacing:"0.5px",textTransform:"uppercase"},
-  input:{width:"100%",background:"#0D0D1A",border:"1px solid #1e2035",borderRadius:10,padding:"11px 13px",color:"#e2e8f0",fontSize:14,boxSizing:"border-box",outline:"none"},
-  btnPrimary:{background:"#00FF88",border:"none",color:"#04120a",borderRadius:12,padding:"14px 20px",cursor:"pointer",fontWeight:900,fontSize:15,width:"100%",minHeight:48},
-  btnGhost:{width:"100%",background:"#1e2035",border:"none",color:"#94a3b8",borderRadius:12,padding:13,cursor:"pointer",fontWeight:600,fontSize:14},
-  btnLink:{background:"none",border:"none",color:"#00FF88",cursor:"pointer",fontSize:14,width:"100%",marginTop:8,padding:8,textAlign:"center"},
-  btnSm:{background:"#1f2440",border:"none",color:"#c7cde0",borderRadius:10,padding:"8px 13px",cursor:"pointer",fontWeight:800,fontSize:12.5},
+  label:{display:"block",fontSize:11,color:"#8A91A3",marginBottom:6,fontWeight:800,letterSpacing:"0.08em",textTransform:"uppercase"},
+  input:{width:"100%",background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:12,padding:"13px 14px",color:"#0D0D1A",fontSize:15,boxSizing:"border-box",outline:"none",fontFamily:"inherit"},
+  btnPrimary:{background:"#00B86B",border:"none",color:"#fff",borderRadius:13,padding:"14px 20px",cursor:"pointer",fontWeight:800,fontSize:15,width:"100%",minHeight:50},
+  btnGhost:{width:"100%",background:"#FFFFFF",border:"1px solid #E7E9F0",color:"#555c6b",borderRadius:13,padding:14,cursor:"pointer",fontWeight:700,fontSize:15},
+  btnLink:{background:"none",border:"none",color:"#047A46",cursor:"pointer",fontSize:14,width:"100%",marginTop:8,padding:8,textAlign:"center",fontWeight:700},
+  btnSm:{background:"#F1F3F7",border:"none",color:"#555c6b",borderRadius:10,padding:"8px 13px",cursor:"pointer",fontWeight:800,fontSize:12.5},
   btnIcon:{background:"none",border:"none",cursor:"pointer",fontSize:15,padding:4,opacity:.6},
-  card:{background:"#14172E",borderRadius:18,padding:18},
+  card:{background:"#FFFFFF",borderRadius:20,padding:18,border:"1px solid #E7E9F0"},
   secHeader:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14},
-  secTitle:{fontWeight:900,fontSize:20,color:"#e2e8f0",margin:0,letterSpacing:"-0.5px"},
-  listItem:{background:"#111827",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10,border:"1px solid #1e2035"},
-  listIcon:{width:38,height:38,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18},
-  chip:{background:"#1e2035",border:"none",color:"#6b7280",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:600},
-  chipOn:{background:"#00FF8822",color:"#00FF88"},
-  empty:{color:"#334155",textAlign:"center",padding:32,fontSize:14},
-  overlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:100,display:"flex",alignItems:"flex-end",justifyContent:"center"},
-  modal:{background:"#111827",borderRadius:"20px 20px 0 0",padding:20,width:"100%",maxWidth:500,maxHeight:"92vh",overflowY:"auto",border:"1px solid #1e2035"},
+  secTitle:{fontWeight:900,fontSize:22,color:"#0D0D1A",margin:0,letterSpacing:"-0.02em"},
+  listItem:{background:"#FFFFFF",borderRadius:16,padding:"13px 15px",marginBottom:9,display:"flex",alignItems:"center",gap:10,border:"1px solid #E7E9F0"},
+  listIcon:{width:40,height:40,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,background:"#F1F3F7"},
+  chip:{background:"#F1F3F7",border:"none",color:"#8A91A3",borderRadius:20,padding:"7px 13px",cursor:"pointer",fontSize:12.5,fontWeight:700},
+  chipOn:{background:"#E7F8EF",color:"#047A46"},
+  empty:{color:"#AAB0BF",textAlign:"center",padding:32,fontSize:14},
+  overlay:{position:"fixed",inset:0,background:"rgba(13,13,26,.4)",zIndex:100,display:"flex",alignItems:"flex-end",justifyContent:"center"},
+  modal:{background:"#FFFFFF",borderRadius:"24px 24px 0 0",padding:20,width:"100%",maxWidth:520,maxHeight:"92vh",overflowY:"auto",border:"1px solid #E7E9F0"},
 };
