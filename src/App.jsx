@@ -1138,14 +1138,16 @@ function Incomes({incomes,categories,onAdd,onEdit,onDelete,onAddCat}){
         const cat=categories.find(c=>c.id===inc.category)||{icon:"💼",color:"#00B86B",label:prettyCat(inc.category)};
         const previsto=inc.status==="previsto";
         return(
-          <div key={inc.id} style={{...S.listItem,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
-            <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A"}}>{inc.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#E8930A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a receber{inc.recorrente?" 🔁":""}</span>}</div>
-              <div style={{fontSize:11,color:"#9AA1B2"}}>{previsto?`vence ${inc.date}`:inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+          <div key={inc.id} style={{...S.listItem,flexDirection:"column",alignItems:"stretch",gap:10,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A"}}>{inc.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#E8930A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a receber{inc.recorrente?" 🔁":""}</span>}</div>
+                <div style={{fontSize:11,color:"#9AA1B2"}}>{previsto?`vence ${inc.date}`:inc.date} · {inc.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              </div>
+              <div style={{fontWeight:800,fontSize:15,color:"#00B86B",opacity:previsto?0.6:1,whiteSpace:"nowrap"}}>+{fmt(inc.amount)}</div>
             </div>
-            <div style={{fontWeight:800,fontSize:15,color:"#00B86B",opacity:previsto?0.6:1}}>+{fmt(inc.amount)}</div>
-            <div style={{display:"flex",gap:2}}>
+            <div style={{display:"flex",gap:6,justifyContent:"flex-end",borderTop:"1px solid #F1F3F7",paddingTop:9}}>
               {previsto&&<button style={{...S.btnIcon,color:"#00B86B"}} title="Marcar como recebido" onClick={()=>onEdit(inc.id,{status:"pago"})}>✅</button>}
               <button style={S.btnIcon} onClick={()=>setForm(inc)}>✏️</button>
               <button style={S.btnIcon} onClick={()=>onDelete(inc.id)}>🗑</button>
@@ -1212,14 +1214,16 @@ function Expenses({expenses,categories,onAdd,onEdit,onDelete,onAddCat}){
         const cat=categories.find(c=>c.id===exp.category)||{icon:"📦",color:"#8A91A3",label:prettyCat(exp.category)};
         const previsto=exp.status==="previsto";
         return(
-          <div key={exp.id} style={{...S.listItem,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
-            <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A"}}>{exp.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#E8930A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a pagar{exp.recorrente?" 🔁":""}</span>}</div>
-              <div style={{fontSize:11,color:"#9AA1B2"}}>{previsto?`vence ${exp.date}`:exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+          <div key={exp.id} style={{...S.listItem,flexDirection:"column",alignItems:"stretch",gap:10,...(previsto?{border:"1px solid #FFD60A44"}:{})}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{...S.listIcon,background:cat.color+"22"}}>{cat.icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A"}}>{exp.description} {previsto&&<span style={{fontSize:10,fontWeight:700,color:"#E8930A",background:"rgba(255,214,10,.13)",borderRadius:6,padding:"1px 6px",marginLeft:2}}>📅 a pagar{exp.recorrente?" 🔁":""}</span>}</div>
+                <div style={{fontSize:11,color:"#9AA1B2"}}>{previsto?`vence ${exp.date}`:exp.date} · {exp.userName} · <span style={{color:cat.color}}>{cat.label}</span></div>
+              </div>
+              <div style={{fontWeight:800,fontSize:15,color:"#FF3D7F",opacity:previsto?0.6:1,whiteSpace:"nowrap"}}>-{fmt(exp.amount)}</div>
             </div>
-            <div style={{fontWeight:800,fontSize:15,color:"#FF3D7F",opacity:previsto?0.6:1}}>-{fmt(exp.amount)}</div>
-            <div style={{display:"flex",gap:2}}>
+            <div style={{display:"flex",gap:6,justifyContent:"flex-end",borderTop:"1px solid #F1F3F7",paddingTop:9}}>
               {previsto&&<button style={{...S.btnIcon,color:"#00B86B"}} title="Marcar como pago" onClick={()=>onEdit(exp.id,{status:"pago"})}>✅</button>}
               <button style={S.btnIcon} onClick={()=>setForm(exp)}>✏️</button>
               <button style={S.btnIcon} onClick={()=>onDelete(exp.id)}>🗑</button>
