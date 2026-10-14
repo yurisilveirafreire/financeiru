@@ -591,7 +591,7 @@ function Sidebar({tab,onTab,demo,onLogout,user,accountData,planInfo,totalLancame
         ))}
       </nav>
       {isExplorador && !demo && (
-        <div style={{margin:"0 14px 12px",background:"#FFFFFF",border:"1px solid #00FF8833",borderRadius:12,padding:14}}>
+        <div style={{margin:"0 14px 12px",background:"#FFFFFF",border:"1px solid #00B86B33",borderRadius:12,padding:14}}>
           <div style={{fontSize:12,color:"#00B86B",fontWeight:800}}>🎮 Modo Explorador</div>
           <div style={{fontSize:11,color:"#8A91A3",margin:"3px 0 8px"}}>{totalLancamentos}/10 lançamentos</div>
           <button style={{width:"100%",background:"#00B86B",border:"none",borderRadius:8,padding:"8px",fontWeight:800,fontSize:12,color:"#0D0D1A",cursor:"pointer"}} onClick={onUpgrade}>Fazer upgrade ⚡</button>
@@ -825,7 +825,7 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
     <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:22,padding:isDesktop?24:22}}>
       <div style={CSub}>Saldo atual · {mName}</div>
       <div style={{fontWeight:900,fontSize:isDesktop?44:46,color:balance>=0?"#00B86B":"#FF3D7F",letterSpacing:"-.03em",lineHeight:1,marginTop:8,...num}}>{fmt(balance)}</div>
-      <div style={{display:"inline-block",marginTop:14,background:balance>=0?"#00FF8818":"#FF3D7F18",color:balance>=0?"#00B86B":"#FF3D7F",fontWeight:800,fontSize:12.5,padding:"6px 12px",borderRadius:10}}>{balance>=0?"✓ tudo certo, sobra no mês":"⚠️ os gastos passaram das entradas"}</div>
+      <div style={{display:"inline-block",marginTop:14,background:balance>=0?"#00B86B18":"#FF3D7F18",color:balance>=0?"#00B86B":"#FF3D7F",fontWeight:800,fontSize:12.5,padding:"6px 12px",borderRadius:10}}>{balance>=0?"✓ tudo certo, sobra no mês":"⚠️ os gastos passaram das entradas"}</div>
     </div>
   );
 
@@ -851,10 +851,17 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
         <span style={{...CTitle,color:"#E8930A"}}>Previsto do mês</span>
         <span style={CSub}>a pagar e a receber</span>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",gap:10}}>
-        <div><div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>a receber</div><div style={{fontWeight:900,fontSize:18,color:"#00B86B",marginTop:3,...num}}>+{fmt(previstoIn)}</div></div>
-        <div><div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>a pagar</div><div style={{fontWeight:900,fontSize:18,color:"#FF3D7F",marginTop:3,...num}}>-{fmt(previstoOut)}</div></div>
-        <div style={{textAlign:"right"}}><div style={{fontSize:12,color:"#8A91A3",fontWeight:700}}>saldo previsto</div><div style={{fontWeight:900,fontSize:20,color:saldoPrevisto>=0?"#E8930A":"#FF3D7F",marginTop:3,...num}}>{fmt(saldoPrevisto)}</div></div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0"}}>
+        <span style={{fontSize:13.5,color:"#555c6b",fontWeight:700}}>a receber</span>
+        <span style={{fontWeight:900,fontSize:16,color:"#00B86B",whiteSpace:"nowrap",...num}}>+{fmt(previstoIn)}</span>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderTop:"1px solid #EEF0F4"}}>
+        <span style={{fontSize:13.5,color:"#555c6b",fontWeight:700}}>a pagar</span>
+        <span style={{fontWeight:900,fontSize:16,color:"#FF3D7F",whiteSpace:"nowrap",...num}}>-{fmt(previstoOut)}</span>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0 2px",borderTop:"1px solid #EEF0F4"}}>
+        <span style={{fontSize:14,color:"#0D0D1A",fontWeight:800}}>saldo previsto</span>
+        <span style={{fontWeight:900,fontSize:20,color:saldoPrevisto>=0?"#E8930A":"#FF3D7F",whiteSpace:"nowrap",...num}}>{fmt(saldoPrevisto)}</span>
       </div>
       <div style={{fontSize:12,color:"#9AA1B2",marginTop:12,lineHeight:1.4,fontWeight:600}}>Saldo atual ({fmt(balance)}) + o que ainda entra − o que ainda sai.</div>
     </div>
@@ -888,16 +895,16 @@ function Dashboard({incomes,expenses,categories,totalIn,totalOut,balance,previst
     <div style={Card}>
       <div style={{...CTitle,marginBottom:14}}>Por pessoa</div>
       {Object.entries(byPerson).map(([name,v])=>(
-        <div key={name} style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+        <div key={name} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 0",borderTop:"1px solid #EEF0F4"}}>
           <div style={{width:40,height:40,background:"#EEF0F4",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#0D0D1A",fontSize:16,flexShrink:0}}>{name[0]?.toUpperCase()}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:800,fontSize:14.5,color:"#0D0D1A"}}>{name}</div>
-            <div style={{display:"flex",gap:12,fontSize:12.5,marginTop:2,fontWeight:700,...num}}>
-              <span style={{color:"#00B86B"}}>+{fmt(v.in)}</span>
-              <span style={{color:"#FF3D7F"}}>-{fmt(v.out)}</span>
+            <div style={{fontWeight:800,fontSize:14,color:"#0D0D1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{name}</div>
+            <div style={{display:"flex",gap:10,fontSize:12.5,marginTop:3,fontWeight:700,...num}}>
+              <span style={{color:"#00B86B",whiteSpace:"nowrap"}}>+{fmt(v.in)}</span>
+              <span style={{color:"#FF3D7F",whiteSpace:"nowrap"}}>-{fmt(v.out)}</span>
             </div>
           </div>
-          <div style={{fontWeight:900,fontSize:15,color:v.in-v.out>=0?"#E8930A":"#FF3D7F",...num}}>{fmt(v.in-v.out)}</div>
+          <div style={{fontWeight:900,fontSize:15,color:v.in-v.out>=0?"#E8930A":"#FF3D7F",whiteSpace:"nowrap",flexShrink:0,...num}}>{fmt(v.in-v.out)}</div>
         </div>
       ))}
     </div>
@@ -1029,7 +1036,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
         <div style={S.fg}>
           <label style={S.label}>Situação</label>
           <div style={{display:"flex",gap:8}}>
-            <button type="button" onClick={()=>setStatus("pago")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="pago"?(isIncome?"#00B86B":"#FF3D7F"):"#EEF0F4"}`,background:status==="pago"?(isIncome?"rgba(0,255,136,.13)":"rgba(255,61,127,.13)"):"#0D0D1A",color:"#0D0D1A"}}>{isIncome?"✅ Já recebi":"✅ Já paguei"}</button>
+            <button type="button" onClick={()=>setStatus("pago")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="pago"?(isIncome?"#00B86B":"#FF3D7F"):"#EEF0F4"}`,background:status==="pago"?(isIncome?"rgba(0,255,136,.13)":"rgba(255,61,127,.13)"):"#FFFFFF",color:"#0D0D1A"}}>{isIncome?"✅ Já recebi":"✅ Já paguei"}</button>
             <button type="button" onClick={()=>setStatus("previsto")} style={{flex:1,padding:"11px 8px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",border:`2px solid ${status==="previsto"?"#E8930A":"#EEF0F4"}`,background:status==="previsto"?"rgba(255,214,10,.13)":"#0D0D1A",color:"#0D0D1A"}}>📅 {isIncome?"A receber":"A pagar"}</button>
           </div>
           {status==="previsto" && (
@@ -1058,7 +1065,7 @@ function ItemForm({type,categories,item,onSave,onClose,onAddCat}){
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6,maxHeight:200,overflowY:"auto"}}>
               {validCats.map(c=>(
                 <button key={c.id} onClick={()=>setCat(c.id)}
-                  style={{background:cat===c.id?c.color+"22":"#0D0D1A",border:`2px solid ${cat===c.id?c.color:"#EEF0F4"}`,borderRadius:10,padding:"8px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:8,color:"#0D0D1A",fontSize:12,fontWeight:600,transition:"all .15s"}}>
+                  style={{background:cat===c.id?c.color+"22":"#F1F3F7",border:`2px solid ${cat===c.id?c.color:"#EEF0F4"}`,borderRadius:10,padding:"8px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:8,color:"#0D0D1A",fontSize:12,fontWeight:600,transition:"all .15s"}}>
                   <span style={{fontSize:18}}>{c.icon}</span>
                   <span style={{flex:1,textAlign:"left",fontSize:11}}>{c.label}</span>
                 </button>
@@ -1275,7 +1282,7 @@ function History({incomes,expenses,categories,month,totalIn,totalOut,balance,goa
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:14,color:"#0D0D1A",display:"flex",alignItems:"center",gap:6}}>
                 {item.description}
-                <span style={{fontSize:9,background:isIn?"#00FF8822":"#FF3D7F22",color:isIn?"#00B86B":"#FF3D7F",borderRadius:4,padding:"2px 6px",fontWeight:700}}>{isIn?"ENTRADA":"GASTO"}</span>
+                <span style={{fontSize:9,background:isIn?"#00B86B22":"#FF3D7F22",color:isIn?"#00B86B":"#FF3D7F",borderRadius:4,padding:"2px 6px",fontWeight:700}}>{isIn?"ENTRADA":"GASTO"}</span>
               </div>
               <div style={{fontSize:11,color:"#9AA1B2"}}>{item.date} · {item.userName||"—"} · <span style={{color:cat.color}}>{cat.label}</span></div>
             </div>
@@ -1374,7 +1381,7 @@ function Categories({categories,expenses,incomes,onAdd,onEdit}){
           <div style={{display:"flex",gap:8,marginBottom:12}}>
             {[{v:"income",l:"💰 Entrada"},{v:"expense",l:"💸 Gasto"},{v:"both",l:"↕️ Ambos"}].map(o=>(
               <button key={o.v} onClick={()=>setType(o.v)}
-                style={{flex:1,padding:"8px",borderRadius:8,border:`2px solid ${type===o.v?"#00B86B":"#EEF0F4"}`,background:type===o.v?"#00FF8822":"#0D0D1A",color:"#0D0D1A",cursor:"pointer",fontWeight:600,fontSize:12}}>
+                style={{flex:1,padding:"8px",borderRadius:8,border:`2px solid ${type===o.v?"#00B86B":"#EEF0F4"}`,background:type===o.v?"#00B86B22":"#F1F3F7",color:"#0D0D1A",cursor:"pointer",fontWeight:600,fontSize:12}}>
                 {o.l}
               </button>
             ))}
@@ -1467,7 +1474,7 @@ function OpenFinanceCard({accountData,user,fb,onUpgrade}){
   };
 
   return(
-    <div style={{...S.card,marginBottom:14,border:"1px solid #00FF8833"}}>
+    <div style={{...S.card,marginBottom:14,border:"1px solid #00B86B33"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
         <div>
           <div style={{fontWeight:700,fontSize:14,color:"#0D0D1A"}}>🏦 Conectar meu banco</div>
@@ -1509,14 +1516,14 @@ function AccountSettings({accountData,user,fb,onSave,onUpgrade,isAdmin,onTab}){
       <h2 style={{...S.secTitle,marginBottom:14}}>👤 Meu Perfil</h2>
 
       {isAdmin && onTab && (
-        <button onClick={()=>onTab("affiliates")} style={{...S.card,width:"100%",textAlign:"left",cursor:"pointer",marginBottom:14,border:"1px solid #00FF8844",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#E7F8EF)"}}>
+        <button onClick={()=>onTab("affiliates")} style={{...S.card,width:"100%",textAlign:"left",cursor:"pointer",marginBottom:14,border:"1px solid #00B86B44",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#E7F8EF)"}}>
           <span style={{fontWeight:700,fontSize:14,color:"#0D0D1A"}}>🎯 Programa de Afiliados</span>
           <span style={{color:"#00B86B",fontWeight:800}}>abrir →</span>
         </button>
       )}
 
       {/* Plano */}
-      <div style={{...S.card,marginBottom:14,background:"#FFFFFF",border:"1px solid #00FF8833"}}>
+      <div style={{...S.card,marginBottom:14,background:"#FFFFFF",border:"1px solid #00B86B33"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
             <div style={{fontSize:11,color:"#8A91A3"}}>plano atual</div>
@@ -1781,7 +1788,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
 
         {/* Gerenciar assinatura (se já for pro) */}
         {currentPlan !== "explorador" && currentPlan !== "influencer" && (
-          <div style={{background:"#00FF8815",border:"1px solid #00FF8833",borderRadius:12,padding:14,marginBottom:16}}>
+          <div style={{background:"#00B86B15",border:"1px solid #00B86B33",borderRadius:12,padding:14,marginBottom:16}}>
             <div style={{fontSize:13,color:"#00B86B",fontWeight:700,marginBottom:4}}>✅ Você já tem o plano {currentPlan === "pro_mensal" ? "Pro Mensal" : "Pro Anual"}</div>
             <div style={{fontSize:12,color:"#8A91A3",marginBottom:10}}>Gerencie sua assinatura, veja faturas ou cancele quando quiser.</div>
             <button style={{background:"#EEF0F4",border:"1px solid #9AA1B2",color:"#0D0D1A",borderRadius:10,padding:"10px 16px",cursor:"pointer",fontWeight:700,fontSize:13,width:"100%"}}
@@ -1847,7 +1854,7 @@ function UpgradeScreen({ user, accountData, fb, onClose }) {
 function UpgradeSuccess({ onClose }) {
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-      <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",border:"1px solid #00FF8833"}}>
+      <div style={{background:"#FFFFFF",border:"1px solid #E7E9F0",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",border:"1px solid #00B86B33"}}>
         <div style={{fontSize:60,marginBottom:16}}>🎉</div>
         <div style={{fontWeight:900,fontSize:22,color:"#00B86B",marginBottom:8}}>Bem-vindo ao Pro!</div>
         <div style={{fontSize:14,color:"#8A91A3",marginBottom:24,lineHeight:1.6}}>Seu plano foi ativado. Agora você tem acesso completo ao iGastei sem limites!</div>
@@ -1892,7 +1899,7 @@ const S={
   btnGhost:{width:"100%",background:"#FFFFFF",border:"1px solid #E7E9F0",color:"#555c6b",borderRadius:13,padding:14,cursor:"pointer",fontWeight:700,fontSize:15},
   btnLink:{background:"none",border:"none",color:"#047A46",cursor:"pointer",fontSize:14,width:"100%",marginTop:8,padding:8,textAlign:"center",fontWeight:700},
   btnSm:{background:"#F1F3F7",border:"none",color:"#555c6b",borderRadius:10,padding:"8px 13px",cursor:"pointer",fontWeight:800,fontSize:12.5},
-  btnIcon:{background:"none",border:"none",cursor:"pointer",fontSize:15,padding:4,opacity:.6},
+  btnIcon:{background:"#F1F3F7",border:"none",cursor:"pointer",fontSize:15,width:34,height:34,borderRadius:10,display:"inline-flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0},
   card:{background:"#FFFFFF",borderRadius:20,padding:18,border:"1px solid #E7E9F0"},
   secHeader:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14},
   secTitle:{fontWeight:900,fontSize:22,color:"#0D0D1A",margin:0,letterSpacing:"-0.02em"},
